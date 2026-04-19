@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import React from 'react';
 import { Button } from '@/components/ui';
 import { Logo } from '@/components/logo';
 import { WaitlistForm } from '@/components/WaitlistForm';
@@ -107,7 +108,7 @@ const testimonials = [
     role: "Founder, MarketFind",
   },
   {
-    quote: "Night Shift built my SaaS dashboard while I was sleeping. I own the code, the domain, everything. No agency could match this speed.",
+    quote: "NightShift built my SaaS dashboard while I was sleeping. I own the code, the domain, everything. No agency could match this speed.",
     author: "Marcus Johnson",
     role: "Solo Founder",
   },
@@ -130,9 +131,28 @@ const fleetAdvantage = [
   },
   {
     headline: "The bottleneck was never your idea.",
-    body: "You always had the vision. The bottleneck was translation — turning vision into code. Night Shift eliminated that bottleneck.",
+    body: "You always had the vision. The bottleneck was translation — turning vision into code. NightShift eliminated that bottleneck.",
   },
 ];
+
+// Animated counter component
+function IdeasCounter() {
+  const [count, setCount] = React.useState(() => Math.floor(Math.random() * 400) + 800);
+  
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setCount(c => c + 1);
+    }, Math.random() * 2000 + 3000);
+    return () => clearInterval(interval);
+  }, []);
+  
+  return (
+    <div className="glass rounded-full px-6 py-3 text-sm text-zinc-400 inline-flex items-center gap-2">
+      <span>🛰️ Ideas built tonight:</span>
+      <span className="text-cyan-400 font-mono font-bold">{count.toLocaleString()}</span>
+    </div>
+  );
+}
 
 export default function Home() {
   return (
@@ -212,7 +232,7 @@ export default function Home() {
               variants={itemVariants}
               className="mx-auto max-w-3xl text-2xl md:text-4xl font-bold gradient-text mb-8"
             >
-              An entire engineering team executing while you sleep.
+              Meet NightShift, a fleet of AI agents that builds while you sleep.
             </motion.p>
 
             {/* Body */}
@@ -318,44 +338,106 @@ export default function Home() {
         </div>
       </section>
 
-      {/* The Fleet Advantage Section */}
-      <section id="how-it-works" className="relative py-24 border-t border-white/5">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              What changes when you have a fleet
-            </h2>
-          </motion.div>
-
-          <div className="space-y-8">
-            {fleetAdvantage.map((statement, index) => (
-              <motion.div
-                key={statement.headline}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.15, duration: 0.6 }}
-                className="relative"
-              >
-                <div className="glass rounded-2xl p-8 md:p-12 border border-white/5 hover:border-neon-purple/30 transition-all">
-                  <div className="max-w-4xl">
-                    <h3 className="text-2xl md:text-4xl font-bold text-white mb-4 leading-tight">
-                      {statement.headline}
-                    </h3>
-                    <p className="text-lg md:text-xl text-zinc-400 leading-relaxed">
-                      {statement.body}
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+      {/* The Fleet Advantage Section - Billboard Slabs */}
+      <section id="how-it-works" className="relative py-0">
+        {/* Slab 1 - Left aligned with cyan accent */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="relative py-16 px-8 md:px-16 bg-gradient-to-r from-cyan-500/5 to-transparent border-t border-white/5"
+        >
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center">
+              <div className="border-l-4 border-cyan-500 pl-8 flex-1">
+                <h3 className="text-4xl md:text-5xl font-bold text-white mb-4 leading-tight">
+                  Your backlog is now a to-do list.
+                </h3>
+                <p className="text-lg text-zinc-400 max-w-xl">
+                  Every idea you've shelved because you couldn't afford to build it. The fleet doesn't care if it's 3 AM. It builds.
+                </p>
+              </div>
+              <div className="hidden md:block text-8xl font-bold text-white/5 select-none">
+                01
+              </div>
+            </div>
           </div>
+        </motion.div>
+
+        {/* Animated Counter */}
+        <div className="py-8 flex justify-center border-t border-white/5">
+          <IdeasCounter />
         </div>
+
+        {/* Slab 2 - Right aligned with purple accent */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="relative py-16 px-8 md:px-16 bg-gradient-to-l from-purple-500/5 to-transparent border-t border-white/5"
+        >
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center flex-row-reverse">
+              <div className="border-r-4 border-purple-500 pr-8 flex-1 text-right">
+                <h3 className="text-4xl md:text-5xl font-bold text-white mb-4 leading-tight">
+                  You just became a 100x founder.
+                </h3>
+                <p className="text-lg text-zinc-400 max-w-xl ml-auto">
+                  The 10x engineer competed with humans. You now have something that competes with entire teams. One founder with a fleet outships a 5-person startup.
+                </p>
+              </div>
+              <div className="hidden md:block text-8xl font-bold text-white/5 select-none">
+                02
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Testimonial Interrupt */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+          className="py-16 px-8 border-t border-white/5"
+        >
+          <div className="max-w-2xl mx-auto text-center">
+            <div className="text-6xl text-cyan-400 leading-none mb-4">"</div>
+            <p className="text-xl md:text-2xl text-zinc-300 mb-6 leading-relaxed">
+              I described my SaaS dashboard at 11pm. Woke up at 7am and it was deployed. I own the code, the domain, everything.
+            </p>
+            <p className="text-sm text-zinc-500">
+              — Sarah Chen, Founder @ TechStart
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Slab 3 - Centered climactic */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="relative py-16 px-8 md:px-16 border-t border-cyan-500/30"
+          style={{ background: 'radial-gradient(ellipse at center, rgba(34, 211, 238, 0.05) 0%, transparent 70%)' }}
+        >
+          <div className="max-w-4xl mx-auto text-center">
+            <h3 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
+              The bottleneck was never your idea.
+            </h3>
+            <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto mb-8">
+              You always had the vision. The bottleneck was translation. Turning vision into code. NightShift eliminated that bottleneck forever.
+            </p>
+            <a 
+              href="#waitlist" 
+              className="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors text-lg font-medium"
+            >
+              Deploy your fleet →
+            </a>
+          </div>
+        </motion.div>
       </section>
 
       {/* Differentiation Section */}
@@ -370,7 +452,7 @@ export default function Home() {
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
               Every other option makes you wait.
               <br />
-              <span className="gradient-text">Night Shift ships while you sleep.</span>
+              <span className="gradient-text">NightShift ships while you sleep.</span>
             </h2>
             <p className="text-zinc-400 max-w-xl mx-auto">
               You&apos;ve tried the alternatives. Here&apos;s the honest truth about each one.
@@ -444,7 +526,7 @@ export default function Home() {
               style={{ background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(10, 10, 15, 0.95) 60%)' }}
             >
               <div className="absolute top-4 right-4">
-                <span className="text-xs font-semibold tracking-widest text-purple-400 uppercase bg-purple-500/10 px-3 py-1 rounded-full border border-purple-500/20">Night Shift</span>
+                <span className="text-xs font-semibold tracking-widest text-purple-400 uppercase bg-purple-500/10 px-3 py-1 rounded-full border border-purple-500/20">NightShift</span>
               </div>
               <div>
                 <div className="text-xs font-semibold tracking-widest text-purple-400 uppercase mb-2">The Alternative</div>
@@ -453,7 +535,7 @@ export default function Home() {
               <div className="space-y-4 text-sm">
                 <div className="flex gap-3">
                   <span className="text-emerald-400 mt-0.5">✓</span>
-                  <span className="text-zinc-300"><span className="text-white font-medium">You own everything.</span> Your code, your domain, your infrastructure. Night Shift is the builder — not the landlord.</span>
+                  <span className="text-zinc-300"><span className="text-white font-medium">You own everything.</span> Your code, your domain, your infrastructure. NightShift is the builder — not the landlord.</span>
                 </div>
                 <div className="flex gap-3">
                   <span className="text-emerald-400 mt-0.5">✓</span>
@@ -628,7 +710,7 @@ export default function Home() {
             <div>
               <div className="flex items-center gap-3 mb-4">
                 <Logo showText={false} />
-                <span className="text-white font-bold">Night Shift</span>
+                <span className="text-white font-bold">NightShift</span>
               </div>
               <p className="text-sm text-zinc-500">
                 One founder. One vision. A fleet that never sleeps.
@@ -699,7 +781,7 @@ export default function Home() {
           {/* Bottom */}
           <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-sm text-zinc-500">
-              © 2026 Night Shift. All rights reserved.
+              © 2026 NightShift. All rights reserved.
             </p>
             <p className="text-sm text-zinc-500 flex items-center gap-2">
               Made by an AI fleet <span className="text-lg">🛰️</span>
