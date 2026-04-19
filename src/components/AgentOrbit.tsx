@@ -2,19 +2,18 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Brain, 
-  Layout, 
-  Wrench, 
-  Lock, 
-  Cloud, 
-  BarChart3, 
-  Search, 
-  FileText, 
-  Target,
-  Plus,
-  Moon
-} from 'lucide-react';
+import {
+  ArchitectIcon,
+  FrontendIcon,
+  BackendIcon,
+  SecurityIcon,
+  DevOpsIcon,
+  DataIcon,
+  QAIcon,
+  DocsIcon,
+  PMIcon,
+  CyprusIcon,
+} from './icons/AgentIcons';
 
 // Agent data with positions on orbit rings
 // Positions are in degrees (0-360) around the circle
@@ -24,26 +23,26 @@ const orbitRings = [
     radius: 90, // px from center
     duration: 20, // seconds for full rotation
     agents: [
-      { 
-        id: 'architect', 
-        icon: Brain, 
-        label: '🧠 Architect', 
+      {
+        id: 'architect',
+        Icon: ArchitectIcon,
+        label: 'Architect',
         description: 'System design and stack selection — planning before the first line of code.',
-        angle: 0 
+        angle: 0
       },
-      { 
-        id: 'frontend', 
-        icon: Layout, 
-        label: '⚡ Frontend', 
+      {
+        id: 'frontend',
+        Icon: FrontendIcon,
+        label: 'Frontend',
         description: 'Interface development — responsive, accessible, pixel-perfect execution.',
-        angle: 120 
+        angle: 120
       },
-      { 
-        id: 'backend', 
-        icon: Wrench, 
-        label: '🔧 Backend', 
+      {
+        id: 'backend',
+        Icon: BackendIcon,
+        label: 'Backend',
         description: 'APIs, databases, and authentication — the engine under the hood.',
-        angle: 240 
+        angle: 240
       },
     ],
   },
@@ -52,33 +51,33 @@ const orbitRings = [
     radius: 150,
     duration: 30,
     agents: [
-      { 
-        id: 'security', 
-        icon: Lock, 
-        label: '🛡️ Security', 
+      {
+        id: 'security',
+        Icon: SecurityIcon,
+        label: 'Security',
         description: 'Audit, harden, and protect — security by design, not afterthought.',
-        angle: 45 
+        angle: 45
       },
-      { 
-        id: 'devops', 
-        icon: Cloud, 
-        label: '🚀 DevOps', 
+      {
+        id: 'devops',
+        Icon: DevOpsIcon,
+        label: 'DevOps',
         description: 'Deploy, scale, and monitor — infrastructure that just works.',
-        angle: 135 
+        angle: 135
       },
-      { 
-        id: 'data', 
-        icon: BarChart3, 
-        label: '📊 Data', 
+      {
+        id: 'data',
+        Icon: DataIcon,
+        label: 'Data',
         description: 'Analytics, pipelines, and insights — turning data into decisions.',
-        angle: 225 
+        angle: 225
       },
-      { 
-        id: 'qa', 
-        icon: Search, 
-        label: '🔍 QA', 
+      {
+        id: 'qa',
+        Icon: QAIcon,
+        label: 'QA',
         description: 'Test, verify, and validate — quality without the bottleneck.',
-        angle: 315 
+        angle: 315
       },
     ],
   },
@@ -87,27 +86,27 @@ const orbitRings = [
     radius: 210,
     duration: 45,
     agents: [
-      { 
-        id: 'docs', 
-        icon: FileText, 
-        label: '📝 Docs', 
+      {
+        id: 'docs',
+        Icon: DocsIcon,
+        label: 'Docs',
         description: 'Documentation and guides — knowledge that scales with your team.',
-        angle: 30 
+        angle: 30
       },
-      { 
-        id: 'pm', 
-        icon: Target, 
-        label: '🎯 PM Agent', 
+      {
+        id: 'pm',
+        Icon: PMIcon,
+        label: 'PM Agent',
         description: 'Scope, prioritize, and track — product management that ships.',
-        angle: 150 
+        angle: 150
       },
-      { 
-        id: 'expand', 
-        icon: Plus, 
-        label: 'Coming Soon', 
+      {
+        id: 'expand',
+        Icon: null,
+        label: 'Coming Soon',
         description: 'New specialist agents rolling out through 2026.',
         angle: 270,
-        isPlaceholder: true 
+        isPlaceholder: true
       },
     ],
   },
@@ -130,7 +129,7 @@ interface AgentNodeProps {
 
 function AgentNode({ agent, ringDuration, isPaused }: AgentNodeProps) {
   const [isHovered, setIsHovered] = useState(false);
-  const Icon = agent.icon;
+  const Icon = agent.Icon;
 
   return (
     <div
@@ -168,12 +167,12 @@ function AgentNode({ agent, ringDuration, isPaused }: AgentNodeProps) {
         onMouseLeave={() => setIsHovered(false)}
         whileHover={{ scale: 1.15, zIndex: 10 }}
         className={`
-          relative w-11 h-11 rounded-full 
+          relative w-11 h-11 rounded-full
           flex flex-col items-center justify-center
           cursor-pointer
           transition-all duration-300
-          ${agent.isPlaceholder 
-            ? 'bg-night-800/50 border border-dashed border-purple-500/30' 
+          ${agent.isPlaceholder
+            ? 'bg-night-800/50 border border-dashed border-purple-500/30'
             : 'glass border border-white/10 hover:border-neon-cyan/40'
           }
           ${isHovered ? 'shadow-[0_0_30px_rgba(34,211,238,0.3)]' : ''}
@@ -184,20 +183,24 @@ function AgentNode({ agent, ringDuration, isPaused }: AgentNodeProps) {
           <div className="absolute -top-1 -right-1">
             <div className="relative">
               <div className="h-2 w-2 rounded-full bg-neon-cyan" />
-              <div 
-                className="absolute inset-0 rounded-full bg-neon-cyan animate-ping" 
-                style={{ animationDuration: '2s' }} 
+              <div
+                className="absolute inset-0 rounded-full bg-neon-cyan animate-ping"
+                style={{ animationDuration: '2s' }}
               />
             </div>
           </div>
         )}
 
         {/* Icon */}
-        <Icon className={`h-5 w-5 ${agent.isPlaceholder ? 'text-purple-400/60' : 'text-white'}`} />
+        {Icon ? (
+          <Icon className={`h-5 w-5 ${agent.isPlaceholder ? 'text-purple-400/60' : 'text-cyan-400 group-hover:text-white transition-colors'}`} />
+        ) : (
+          <span className="text-purple-400/60 text-lg">+</span>
+        )}
       </motion.div>
 
       {/* Label */}
-      <div 
+      <div
         className={`
           absolute top-full left-1/2 -translate-x-1/2 mt-2
           text-xs font-medium whitespace-nowrap
@@ -214,14 +217,14 @@ export function AgentOrbit() {
   const [isPaused, setIsPaused] = useState(false);
 
   return (
-    <div 
+    <div
       className="relative mx-auto"
       style={{ width: 500, height: 500 }}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
       {/* Background radial glow */}
-      <div 
+      <div
         className="absolute inset-0 rounded-full pointer-events-none"
         style={{
           background: 'radial-gradient(circle at center, rgba(139, 92, 246, 0.15) 0%, transparent 70%)',
@@ -231,7 +234,7 @@ export function AgentOrbit() {
       {/* Center: Cyprus */}
       <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
         <motion.div
-          animate={{ 
+          animate={{
             boxShadow: [
               '0 0 30px rgba(139, 92, 246, 0.4), 0 0 60px rgba(139, 92, 246, 0.2)',
               '0 0 50px rgba(139, 92, 246, 0.6), 0 0 100px rgba(139, 92, 246, 0.3)',
@@ -244,7 +247,7 @@ export function AgentOrbit() {
             background: 'linear-gradient(135deg, #9333ea 0%, #06b6d4 100%)',
           }}
         >
-          <Moon className="h-8 w-8 text-white" />
+          <CyprusIcon className="h-8 w-8 text-cyan-400" />
         </motion.div>
         <div className="absolute top-full left-1/2 -translate-x-1/2 mt-3 text-sm font-semibold text-white">
           Cyprus
@@ -259,7 +262,7 @@ export function AgentOrbit() {
           style={{ width: ring.radius * 2, height: ring.radius * 2 }}
         >
           {/* Ring border */}
-          <div 
+          <div
             className="absolute inset-0 rounded-full border border-dashed border-purple-500/20"
             style={{
               animation: `orbitRotate ${ring.duration}s linear infinite`,
@@ -289,8 +292,8 @@ export function AgentOrbit() {
                     animationPlayState: isPaused ? 'paused' : 'running',
                   }}
                 >
-                  <AgentNode 
-                    agent={agent} 
+                  <AgentNode
+                    agent={agent}
                     ringDuration={ring.duration}
                     isPaused={isPaused}
                   />
