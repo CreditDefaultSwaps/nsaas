@@ -24,17 +24,9 @@ import {
   Bot,
   Send,
   Server,
-  Code,
-  Brain,
-  Layout,
-  Wrench,
-  Lock,
-  Cloud,
-  BarChart3,
-  Search,
-  FileText,
-  Target
+  Code
 } from 'lucide-react';
+import { AgentOrbit } from '@/components/AgentOrbit';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -58,39 +50,6 @@ const itemVariants = {
     },
   },
 };
-
-// Featured agents (top row - full cards)
-const featuredAgents = [
-  {
-    icon: Brain,
-    name: '🧠 Architect Agent',
-    description: 'System design and stack selection — planning before the first line of code.',
-    color: 'from-violet-500/20 to-purple-500/20',
-  },
-  {
-    icon: Layout,
-    name: '⚡ Frontend Agent',
-    description: 'Interface development — responsive, accessible, pixel-perfect execution.',
-    color: 'from-cyan-500/20 to-blue-500/20',
-  },
-  {
-    icon: Wrench,
-    name: '🔧 Backend Agent',
-    description: 'APIs, databases, and authentication — the engine under the hood.',
-    color: 'from-emerald-500/20 to-teal-500/20',
-  },
-];
-
-// Specialist agents (bottom row - pill tags)
-const specialistAgents = [
-  { icon: Lock, name: '🛡️ Security' },
-  { icon: Cloud, name: '🚀 DevOps' },
-  { icon: BarChart3, name: '📊 Data' },
-  { icon: Search, name: '🔍 QA' },
-  { icon: FileText, name: '📝 Docs' },
-  { icon: Target, name: '🎯 PM' },
-  { icon: Moon, name: '🌙 Cyprus' },
-];
 
 // Pricing data - renamed tiers
 const pricingPlans = [
@@ -309,117 +268,50 @@ export default function Home() {
       </section>
 
       {/* How The Fleet Works Section */}
-      <section id="fleet" className="relative py-24 border-t border-white/5">
+      <section id="fleet" className="relative py-24 border-t border-white/5 overflow-hidden">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mb-8"
           >
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Not one AI. A coordinated swarm.
+              Not One AI. A Coordinated Swarm.
             </h2>
             <p className="text-zinc-400 max-w-2xl mx-auto text-lg">
-              10 specialized agents. Each an expert. Working in parallel. Reporting to you.
+              Cyprus leads. 10 specialists execute. All at once, all night.
             </p>
           </motion.div>
 
-          {/* Agent Roster - Split Layout */}
-          <div className="relative space-y-8">
-            {/* Background grid effect */}
-            <div className="absolute inset-0 bg-gradient-to-b from-neon-cyan/5 via-transparent to-transparent rounded-3xl pointer-events-none" />
-            
-            {/* TOP ROW: 3 Featured Agents */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {featuredAgents.map((agent, index) => (
-                <motion.div
-                  key={agent.name}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                  whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
-                  className="relative glass rounded-2xl p-6 border border-white/10 hover:border-neon-cyan/30 transition-all group"
-                >
-                  {/* Status dot - pulsing cyan */}
-                  <div className="absolute top-4 right-4">
-                    <div className="relative">
-                      <div className="h-2 w-2 rounded-full bg-neon-cyan" />
-                      <div className="absolute inset-0 rounded-full bg-neon-cyan animate-ping" style={{ animationDuration: '2s' }} />
-                    </div>
-                  </div>
-
-                  {/* Icon */}
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${agent.color} flex items-center justify-center mb-5 group-hover:scale-110 transition-transform`}>
-                    <agent.icon className="h-6 w-6 text-white" />
-                  </div>
-
-                  {/* Content */}
-                  <h3 className="text-lg font-bold text-white mb-3">{agent.name}</h3>
-                  <p className="text-sm text-zinc-400 leading-relaxed">{agent.description}</p>
-                </motion.div>
-              ))}
+          {/* Orbit Visualization */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2, duration: 0.6 }}
+            className="flex justify-center mb-8"
+          >
+            <div className="hidden md:block">
+              <AgentOrbit />
             </div>
+            {/* Mobile version - simplified */}
+            <div className="md:hidden">
+              <div className="relative" style={{ width: 320, height: 320 }}>
+                <AgentOrbit />
+              </div>
+            </div>
+          </motion.div>
 
-            {/* MIDDLE ROW: Transition text */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.3 }}
-              className="text-center"
-            >
-              <p className="text-sm text-zinc-500">
-                Plus 7 more specialists in your fleet:
-              </p>
-            </motion.div>
-
-            {/* BOTTOM ROW: Specialist Pills */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.4 }}
-              className="flex flex-wrap justify-center gap-3"
-            >
-              {specialistAgents.map((agent, index) => (
-                <motion.div
-                  key={agent.name}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.4 + index * 0.05 }}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/60 border border-slate-700 text-sm text-zinc-300 hover:border-purple-500/40 hover:shadow-[0_0_20px_rgba(139,92,246,0.15)] transition-all cursor-default"
-                >
-                  <span>{agent.name}</span>
-                </motion.div>
-              ))}
-            </motion.div>
-          </div>
-
-          {/* Fleet Expansion Footer */}
+          {/* Beta notice */}
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            transition={{ delay: 0.5 }}
-            className="mt-8 text-center"
+            transition={{ delay: 0.4 }}
+            className="text-center"
           >
             <p className="text-sm text-zinc-500">
-              Our fleet is continuously expanding. Each new agent makes your products smarter, faster, and more resilient.
-            </p>
-          </motion.div>
-
-          {/* Vision vs Reality Honesty Signal */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.6 }}
-            className="mt-6 text-center"
-          >
-            <p className="text-xs text-zinc-600">
               Currently in private beta. Core fleet active. Additional specialist agents rolling out through 2026.
             </p>
           </motion.div>
