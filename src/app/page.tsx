@@ -323,7 +323,7 @@ export default function Home() {
             className="text-center mb-8 pt-8"
           >
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Not One AI. A Coordinated Swarm.
+              A Coordinated Agentic Swarm.
             </h2>
             <p className="text-zinc-400 max-w-2xl mx-auto text-lg">
               Every NightShift deployment is led by <span className="text-cyan-400 font-medium">Cyprus</span> — your dedicated lead agent. Cyprus reviews your request, briefs the specialist fleet, resolves conflicts, and delivers a morning handoff. Think of Cyprus as your AI engineering lead who never sleeps, never drops context, and always ships.
@@ -347,7 +347,7 @@ export default function Home() {
               className="md:hidden flex justify-center"
               style={{ width: '100%', overflowX: 'hidden' }}
             >
-              <div style={{ transform: 'scale(0.62)', transformOrigin: 'top center', width: 480, height: 480, flexShrink: 0 }}>
+              <div style={{ transform: 'scale(0.55)', transformOrigin: 'top center', width: 560, height: 560, flexShrink: 0 }}>
                 <AgentOrbit />
               </div>
             </div>
@@ -629,7 +629,10 @@ export default function Home() {
               viewport={{ once: true }}
               transition={{ delay: 0.2 }}
               className="relative neon-border rounded-2xl p-8 flex flex-col gap-5"
-              style={{ background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(10, 10, 15, 0.95) 60%)' }}
+              style={{
+                background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, rgba(10, 10, 15, 0.97) 60%)',
+                boxShadow: '0 0 60px rgba(139, 92, 246, 0.2), 0 0 120px rgba(139, 92, 246, 0.08), inset 0 1px 0 rgba(255,255,255,0.05)',
+              }}
             >
               <div className="absolute top-4 right-4">
                 <span className="text-xs font-semibold tracking-widest text-purple-400 uppercase bg-purple-500/10 px-3 py-1 rounded-full border border-purple-500/20">NightShift</span>
@@ -789,6 +792,9 @@ export default function Home() {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             className="glass neon-border rounded-3xl p-8 md:p-12"
+            style={{
+              boxShadow: '0 0 80px rgba(139, 92, 246, 0.25), 0 0 160px rgba(34, 211, 238, 0.08), inset 0 1px 0 rgba(255,255,255,0.05)',
+            }}
           >
             <div className="text-center mb-8">
               {/* Urgency Text */}

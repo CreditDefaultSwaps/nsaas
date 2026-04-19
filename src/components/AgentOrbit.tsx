@@ -20,7 +20,7 @@ import {
 const rings = [
   {
     id: 'inner',
-    radius: 90,
+    radius: 110,
     duration: 20,
     agents: [
       { id: 'architect', Icon: ArchitectIcon, label: 'Architect', description: 'System design and stack selection — planning before the first line of code.', angle: 0 },
@@ -30,7 +30,7 @@ const rings = [
   },
   {
     id: 'middle',
-    radius: 150,
+    radius: 185,
     duration: 30,
     agents: [
       { id: 'security', Icon: SecurityIcon, label: 'Security', description: 'Security hardening and vulnerability detection — every build.', angle: 60 },
@@ -40,7 +40,7 @@ const rings = [
   },
   {
     id: 'outer',
-    radius: 210,
+    radius: 258,
     duration: 45,
     agents: [
       { id: 'qa', Icon: QAIcon, label: 'QA', description: 'Automated testing and quality gates — nothing ships broken.', angle: 90 },
@@ -68,30 +68,57 @@ interface NodeProps {
 function AgentNode({ Icon, label, description, x, y, centerX, centerY }: NodeProps) {
   const [hovered, setHovered] = useState(false);
 
+  // Smart tooltip positioning based on node location relative to center
+  // x, y are offsets from center (positive x = right, positive y = down)
+  const tooltipStyle: React.CSSProperties = (() => {
+    const absX = Math.abs(x);
+    const absY = Math.abs(y);
+    const base: React.CSSProperties = { position: 'absolute', zIndex: 50 };
+
+    // Primarily left/right? Open to the opposite side
+    if (absX > absY * 1.2) {
+      if (x > 0) {
+        // Right side — open to the left
+        return { ...base, right: '100%', top: '50%', transform: 'translateY(-50%)', marginRight: 12 };
+      } else {
+        // Left side — open to the right
+        return { ...base, left: '100%', top: '50%', transform: 'translateY(-50%)', marginLeft: 12 };
+      }
+    }
+    // Primarily up/down
+    if (y < 0) {
+      // Top — open downward
+      return { ...base, top: '100%', left: '50%', transform: 'translateX(-50%)', marginTop: 10 };
+    }
+    // Bottom — open upward
+    return { ...base, bottom: '100%', left: '50%', transform: 'translateX(-50%)', marginBottom: 10 };
+  })();
+
   return (
     <div
-      className="absolute z-10"
+      className="absolute"
       style={{
         left: centerX + x - 22,
         top: centerY + y - 22,
         width: 44,
         height: 44,
+        zIndex: hovered ? 50 : 10,
       }}
     >
       {/* Tooltip */}
       <AnimatePresence>
         {hovered && (
           <motion.div
-            initial={{ opacity: 0, y: 6, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 6, scale: 0.95 }}
-            transition={{ duration: 0.15 }}
-            className="absolute z-50 pointer-events-none"
-            style={{ bottom: '100%', left: '50%', transform: 'translateX(-50%)', marginBottom: 10 }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.12 }}
+            className="pointer-events-none"
+            style={tooltipStyle}
           >
-            <div className="glass rounded-xl px-3 py-2 border border-purple-500/30 text-center" style={{ minWidth: 140 }}>
+            <div className="glass rounded-xl px-3 py-2 border border-purple-500/30 text-center" style={{ minWidth: 150, maxWidth: 180 }}>
               <p className="text-xs font-semibold text-white mb-1">{label}</p>
-              <p className="text-xs text-zinc-400 leading-relaxed" style={{ maxWidth: 160 }}>{description}</p>
+              <p className="text-xs text-zinc-400 leading-relaxed">{description}</p>
             </div>
           </motion.div>
         )}
@@ -133,7 +160,7 @@ function AgentNode({ Icon, label, description, x, y, centerX, centerY }: NodePro
 }
 
 export function AgentOrbit() {
-  const size = 480;
+  const size = 560;
   const center = size / 2;
 
   return (
