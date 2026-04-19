@@ -290,17 +290,19 @@ export default function Home() {
             {/* Stats */}
             <motion.div 
               variants={itemVariants}
-              className="grid grid-cols-3 gap-8 max-w-2xl mx-auto"
+              className="flex flex-row justify-center items-start gap-0 max-w-3xl mx-auto w-full"
             >
               {[
                 { value: '10+', sub: 'agents', label: 'And growing' },
                 { value: '48 hrs', sub: '', label: 'Idea to live product' },
-                { value: '1/1000th', sub: '', label: 'The cost of a dev team' },
-              ].map((stat) => (
-                <div key={stat.label} className="text-center">
-                  <div className="text-5xl md:text-6xl font-bold text-white mb-1">{stat.value}</div>
-                  {stat.sub && <div className="text-sm text-neon-cyan font-medium mb-1">{stat.sub}</div>}
-                  <div className="text-sm text-zinc-500">{stat.label}</div>
+                { value: '$99', sub: '/mo', label: 'vs $15K/yr for an engineer' },
+              ].map((stat, i) => (
+                <div key={stat.label} className="flex-1 text-center px-4" style={i > 0 ? { borderLeft: '1px solid rgba(255,255,255,0.06)' } : {}}>
+                  <div className="flex items-end justify-center gap-1">
+                    <span className="text-5xl md:text-6xl font-bold text-white">{stat.value}</span>
+                    {stat.sub && <span className="text-lg text-neon-cyan font-medium mb-1">{stat.sub}</span>}
+                  </div>
+                  <div className="text-sm text-zinc-500 mt-1 leading-snug">{stat.label}</div>
                 </div>
               ))}
             </motion.div>
@@ -324,7 +326,7 @@ export default function Home() {
               Not One AI. A Coordinated Swarm.
             </h2>
             <p className="text-zinc-400 max-w-2xl mx-auto text-lg">
-              Cyprus leads. 10 specialists execute. All at once, all night.
+              Every NightShift deployment is led by <span className="text-cyan-400 font-medium">Cyprus</span> — your dedicated lead agent. Cyprus reviews your request, briefs the specialist fleet, resolves conflicts, and delivers a morning handoff. Think of Cyprus as your AI engineering lead who never sleeps, never drops context, and always ships.
             </p>
           </motion.div>
 
@@ -366,134 +368,180 @@ export default function Home() {
         </div>
       </section>
 
-      {/* The Fleet Advantage Section - Billboard Slabs */}
-      <section id="how-it-works" className="relative py-0">
-        {/* Section Number */}
-        <span className="absolute top-8 left-8 text-xs font-mono tracking-widest text-zinc-600 uppercase z-10">02</span>
-        
-        {/* Slab 1 - Left aligned with cyan accent */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="relative py-16 px-8 md:px-16 bg-gradient-to-r from-cyan-500/5 to-transparent"
-        >
-          <div className="h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent absolute top-0 left-0 right-0" />
-          <div className="max-w-7xl mx-auto">
-            <div className="flex items-center">
-              <div className="border-l-4 border-cyan-500 pl-8 flex-1">
-                <h3 className="text-4xl md:text-5xl font-bold text-white mb-4 leading-tight">
-                  Your backlog is now a to-do list.
-                </h3>
-                <p className="text-lg text-zinc-400 max-w-xl">
-                  Every idea you've shelved because you couldn't afford to build it. The fleet doesn't care if it's 3 AM. It builds.
-                </p>
-              </div>
-              <div className="hidden md:block text-8xl font-bold text-white/5 select-none">
-                01
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Animated Counter */}
-        <div className="py-8 flex justify-center relative">
-          <div className="h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent absolute top-0 left-0 right-0" />
-          <IdeasCounter />
-        </div>
-
-        {/* Slab 2 - Right aligned with purple accent */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="relative py-16 px-8 md:px-16 bg-gradient-to-l from-purple-500/5 to-transparent"
-        >
-          <div className="h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent absolute top-0 left-0 right-0" />
-          <div className="max-w-7xl mx-auto">
-            <div className="flex items-center flex-row-reverse">
-              <div className="border-r-4 border-purple-500 pr-8 flex-1 text-right">
-                <h3 className="text-4xl md:text-5xl font-bold text-white mb-4 leading-tight">
-                  You just became a 100x founder.
-                </h3>
-                <p className="text-lg text-zinc-400 max-w-xl ml-auto">
-                  The 10x engineer competed with humans. You now have something that competes with entire teams. One founder with a fleet outships a 5-person startup.
-                </p>
-              </div>
-              <div className="hidden md:block text-8xl font-bold text-white/5 select-none">
-                02
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Testimonial Interrupt */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-          className="py-16 px-8 relative"
-        >
-          <div className="h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent absolute top-0 left-0 right-0" />
-          <div className="max-w-2xl mx-auto text-center">
-            <div className="text-6xl text-cyan-400 leading-none mb-4">"</div>
-            <p className="text-xl md:text-2xl text-zinc-300 mb-6 leading-relaxed">
-              I described my SaaS dashboard at 11pm. Woke up at 7am and it was deployed. I own the code, the domain, everything.
-            </p>
-            <p className="text-sm text-zinc-500">
-              — Sarah Chen, Founder @ TechStart
-            </p>
-          </div>
-        </motion.div>
-
-        {/* Slab 3 - Centered climactic */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="relative py-16 px-8 md:px-16"
-          style={{ background: 'radial-gradient(ellipse at center, rgba(34, 211, 238, 0.05) 0%, transparent 70%)' }}
-        >
-          <div className="h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent absolute top-0 left-0 right-0" />
-          <div className="max-w-4xl mx-auto text-center">
-            <h3 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
-              The bottleneck was never your idea.
-            </h3>
-            <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto mb-8">
-              You always had the vision. The bottleneck was translation. Turning vision into code. NightShift eliminated that bottleneck forever.
-            </p>
-            <a 
-              href="#waitlist" 
-              className="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors text-lg font-medium"
-            >
-              Deploy your fleet →
-            </a>
-          </div>
-        </motion.div>
-      </section>
-
-      {/* Product Proof — Terminal Mockup Section */}
-      <section className="relative py-24">
-        <div className="h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent absolute top-0 left-0 right-0" />
-        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+      {/* How It Works Section - Timeline + Terminal Split */}
+      <section id="how-it-works" className="relative py-24">
+        <div className="h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent" />
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-24">
+          
+          {/* Section header */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-12"
+            className="text-center mb-16"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Watch the fleet work
-            </h2>
-            <p className="text-zinc-400 max-w-2xl mx-auto">
-              Real output from a NightShift session. Your product gets this treatment every night.
-            </p>
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">From idea to live product in one night</h2>
+            <p className="text-zinc-400 max-w-2xl mx-auto">Here's exactly what happens between when you submit and when you wake up.</p>
           </motion.div>
-          <TerminalMockup />
+
+          {/* Split layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+            
+            {/* LEFT: Timestamp timeline */}
+            <div className="space-y-0">
+              {/* 10:47 PM */}
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0 * 0.1 }}
+                className="flex items-start gap-4"
+              >
+                <div className="w-20 shrink-0">
+                  <span className="text-xs font-mono text-zinc-600">10:47 PM</span>
+                </div>
+                <div className="relative flex flex-col items-center">
+                  <div className="w-2 h-2 rounded-full bg-cyan-400" />
+                  <div className="w-px h-16 bg-slate-800" />
+                </div>
+                <div className="pb-8">
+                  <h4 className="text-white font-semibold mb-1">You submit your request</h4>
+                  <p className="text-sm text-zinc-400">Brief description in plain English. No specs. No tickets. Just what you want.</p>
+                </div>
+              </motion.div>
+
+              {/* 10:48 PM */}
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 1 * 0.1 }}
+                className="flex items-start gap-4"
+              >
+                <div className="w-20 shrink-0">
+                  <span className="text-xs font-mono text-zinc-600">10:48 PM</span>
+                </div>
+                <div className="relative flex flex-col items-center">
+                  <div className="w-2 h-2 rounded-full bg-purple-400" />
+                  <div className="w-px h-16 bg-slate-800" />
+                </div>
+                <div className="pb-8">
+                  <h4 className="text-white font-semibold mb-1">Cyprus activates the fleet</h4>
+                  <p className="text-sm text-zinc-400">Your lead agent reads your request, scans your codebase, and briefs 8 specialist agents simultaneously.</p>
+                </div>
+              </motion.div>
+
+              {/* 10:51 PM */}
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 2 * 0.1 }}
+                className="flex items-start gap-4"
+              >
+                <div className="w-20 shrink-0">
+                  <span className="text-xs font-mono text-zinc-600">10:51 PM</span>
+                </div>
+                <div className="relative flex flex-col items-center">
+                  <div className="w-2 h-2 rounded-full bg-purple-400" />
+                  <div className="w-px h-16 bg-slate-800" />
+                </div>
+                <div className="pb-8">
+                  <h4 className="text-white font-semibold mb-1">Architect generates the spec</h4>
+                  <p className="text-sm text-zinc-400">System design complete. 12 components mapped. 3 API routes planned. Stack confirmed.</p>
+                </div>
+              </motion.div>
+
+              {/* 10:52 PM */}
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 3 * 0.1 }}
+                className="flex items-start gap-4"
+              >
+                <div className="w-20 shrink-0">
+                  <span className="text-xs font-mono text-zinc-600">10:52 PM</span>
+                </div>
+                <div className="relative flex flex-col items-center">
+                  <div className="w-2 h-2 rounded-full bg-cyan-400" />
+                  <div className="w-px h-16 bg-slate-800" />
+                </div>
+                <div className="pb-8">
+                  <h4 className="text-white font-semibold mb-1">Frontend + Backend build in parallel</h4>
+                  <p className="text-sm text-zinc-400">Two agents working simultaneously. Frontend builds your UI. Backend builds your API. No bottleneck.</p>
+                </div>
+              </motion.div>
+
+              {/* 11:03 PM */}
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 4 * 0.1 }}
+                className="flex items-start gap-4"
+              >
+                <div className="w-20 shrink-0">
+                  <span className="text-xs font-mono text-zinc-600">11:03 PM</span>
+                </div>
+                <div className="relative flex flex-col items-center">
+                  <div className="w-2 h-2 rounded-full bg-emerald-400" />
+                  <div className="w-px h-16 bg-slate-800" />
+                </div>
+                <div className="pb-8">
+                  <h4 className="text-white font-semibold mb-1">QA agent runs tests</h4>
+                  <p className="text-sm text-zinc-400">Automated tests written and passing. 0 build errors. 0 TypeScript errors.</p>
+                </div>
+              </motion.div>
+
+              {/* 11:04 PM */}
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 5 * 0.1 }}
+                className="flex items-start gap-4"
+              >
+                <div className="w-20 shrink-0">
+                  <span className="text-xs font-mono text-zinc-600">11:04 PM</span>
+                </div>
+                <div className="relative flex flex-col items-center">
+                  <div className="w-2 h-2 rounded-full bg-emerald-400" />
+                  <div className="w-px h-16 bg-slate-800" />
+                </div>
+                <div className="pb-8">
+                  <h4 className="text-white font-semibold mb-1">DevOps deploys to your infrastructure</h4>
+                  <p className="text-sm text-zinc-400">Your Vercel. Your Supabase. Your domain. Deployed and live.</p>
+                </div>
+              </motion.div>
+
+              {/* 6:03 AM */}
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 6 * 0.1 }}
+                className="flex items-start gap-4"
+              >
+                <div className="w-20 shrink-0">
+                  <span className="text-xs font-mono text-zinc-600">6:03 AM</span>
+                </div>
+                <div className="relative flex flex-col items-center">
+                  <div className="w-3 h-3 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.5)]" />
+                </div>
+                <div>
+                  <h4 className="text-white font-semibold mb-1">Morning handoff from Cyprus</h4>
+                  <p className="text-sm text-zinc-400 mb-2">PR created with full context. Your product is live. Cyprus sends you a summary.</p>
+                  <span className="inline-flex items-center px-2 py-1 rounded bg-amber-500/10 border border-amber-500/20 text-xs text-amber-400">You wake up to this ↓</span>
+                </div>
+              </motion.div>
+            </div>
+
+            {/* RIGHT: Terminal mockup (sticky on desktop) */}
+            <div className="lg:sticky lg:top-24">
+              <TerminalMockup />
+            </div>
+          </div>
         </div>
       </section>
 

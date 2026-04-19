@@ -209,7 +209,10 @@ export function AgentOrbit() {
           >
             <CyprusIcon className="h-7 w-7 text-white" />
           </motion.div>
-          <div className="text-xs font-semibold text-white text-center mt-2 whitespace-nowrap">Cyprus</div>
+          <div className="text-center mt-2">
+            <div className="text-sm font-semibold text-white">Cyprus</div>
+            <div className="text-xs text-cyan-400 font-medium tracking-wide mt-0.5">Lead Agent</div>
+          </div>
         </div>
 
         {/* Agent nodes — stationary, positioned by angle */}
@@ -230,6 +233,17 @@ export function AgentOrbit() {
             );
           })
         )}
+      </div>
+
+      {/* Cyprus description card — outside the orbit */}
+      <div className="mt-6 mb-4 max-w-sm text-center px-4">
+        <div className="inline-flex items-center gap-2 mb-2">
+          <div className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+          <span className="text-xs font-mono text-cyan-400 tracking-widest uppercase">Cyprus / Lead Agent</span>
+        </div>
+        <p className="text-sm text-zinc-400 leading-relaxed">
+          Orchestrates the fleet. Briefs you every morning. Never misses a shift.
+        </p>
       </div>
 
       {/* Pills below */}
