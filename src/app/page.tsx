@@ -28,6 +28,7 @@ import {
   Code
 } from 'lucide-react';
 import { AgentOrbit } from '@/components/AgentOrbit';
+import { TerminalMockup } from '@/components/TerminalMockup';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -60,7 +61,8 @@ const pricingPlans = [
     period: '/mo',
     description: 'Perfect for testing concepts and building MVPs',
     features: [
-      '5 products per month',
+      '1 sandbox environment',
+      '2 products per month',
       'Your own codebase',
       'Your own domain',
       'Email support',
@@ -74,7 +76,8 @@ const pricingPlans = [
     period: '/mo',
     description: 'For founders shipping multiple products',
     features: [
-      '20 products per month',
+      '2 sandbox environments',
+      '5 products per month',
       'Priority queue',
       'Custom domains',
       'Slack alerts',
@@ -155,13 +158,31 @@ function IdeasCounter() {
 }
 
 export default function Home() {
+  // Scroll listener for nav border transition
+  React.useEffect(() => {
+    const nav = document.getElementById('main-nav');
+    if (!nav) return;
+    
+    const handleScroll = () => {
+      if (window.scrollY > 50) {
+        nav.style.borderColor = 'rgba(139, 92, 246, 0.2)';
+      } else {
+        nav.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+      }
+    };
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
     <div className="min-h-screen bg-night-900">
       {/* Navigation */}
       <motion.nav 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-night-900/80 backdrop-blur-xl"
+        className="fixed top-0 left-0 right-0 z-50 border-b border-white/[0.08] bg-[rgba(10,10,15,0.85)] backdrop-blur-[20px] backdrop-saturate-[180%] transition-all duration-300"
+        id="main-nav"
       >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
@@ -215,14 +236,14 @@ export default function Home() {
             <motion.div variants={itemVariants} className="mb-8">
               <div className="inline-flex items-center gap-2 rounded-full glass px-4 py-2 border-neon-cyan/30">
                 <Zap className="h-4 w-4 text-neon-cyan" />
-                <span className="text-sm text-zinc-300 font-medium">The 10x engineer is dead. The 100x founder is here.</span>
+
               </div>
             </motion.div>
 
             {/* Headline */}
             <motion.h1 
               variants={itemVariants}
-              className="text-5xl md:text-7xl font-bold tracking-tight text-white mb-6"
+              className="text-6xl md:text-8xl font-bold tracking-tight text-white mb-6"
             >
               Stop waiting on engineers.
             </motion.h1>
@@ -249,10 +270,10 @@ export default function Home() {
               className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6"
             >
               <a href="#waitlist">
-                <Button size="lg" className="gap-2 neon-glow animate-glow-pulse text-base px-8 py-6">
+                <Button size="lg" className="group gap-2 neon-glow animate-glow-pulse text-lg px-10 py-5 hover:shadow-[0_0_30px_rgba(34,211,238,0.4),0_0_60px_rgba(139,92,246,0.25)]">
                   <Rocket className="h-5 w-5" />
                   Deploy your fleet
-                  <ArrowRight className="h-4 w-4" />
+                  <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
                 </Button>
               </a>
               <a href="#fleet" className="text-zinc-400 hover:text-white transition-colors flex items-center gap-2">
@@ -277,7 +298,7 @@ export default function Home() {
                 { value: '1/1000th', sub: '', label: 'The cost of a dev team' },
               ].map((stat) => (
                 <div key={stat.label} className="text-center">
-                  <div className="text-3xl md:text-4xl font-bold text-white mb-1">{stat.value}</div>
+                  <div className="text-5xl md:text-6xl font-bold text-white mb-1">{stat.value}</div>
                   {stat.sub && <div className="text-sm text-neon-cyan font-medium mb-1">{stat.sub}</div>}
                   <div className="text-sm text-zinc-500">{stat.label}</div>
                 </div>
@@ -310,14 +331,18 @@ export default function Home() {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2, duration: 0.6 }}
-            className="flex justify-center mb-8"
+            className="flex justify-center mb-8 overflow-hidden w-full"
           >
-            <div className="hidden md:block">
+            {/* Desktop */}
+            <div className="hidden md:flex justify-center">
               <AgentOrbit />
             </div>
-            {/* Mobile version - simplified */}
-            <div className="md:hidden">
-              <div className="relative" style={{ width: 320, height: 320 }}>
+            {/* Mobile — scale down to fit */}
+            <div
+              className="md:hidden flex justify-center"
+              style={{ width: '100%', overflowX: 'hidden' }}
+            >
+              <div style={{ transform: 'scale(0.62)', transformOrigin: 'top center', width: 480, height: 480, flexShrink: 0 }}>
                 <AgentOrbit />
               </div>
             </div>
@@ -438,6 +463,26 @@ export default function Home() {
             </a>
           </div>
         </motion.div>
+      </section>
+
+      {/* Product Proof — Terminal Mockup Section */}
+      <section className="relative py-24">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Watch the fleet work
+            </h2>
+            <p className="text-zinc-400 max-w-2xl mx-auto">
+              Real output from a NightShift session. Your product gets this treatment every night.
+            </p>
+          </motion.div>
+          <TerminalMockup />
+        </div>
       </section>
 
       {/* Differentiation Section */}

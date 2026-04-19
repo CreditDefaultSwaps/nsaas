@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArchitectIcon,
   FrontendIcon,
@@ -15,36 +15,17 @@ import {
   CyprusIcon,
 } from './icons/AgentIcons';
 
-// Agent data with positions on orbit rings
-// Reduced to 8 agents: 3 inner, 3 middle, 2 outer + Cyprus center
-// PM and Docs moved to pills below the orbit
-const orbitRings = [
+// Agents positioned on fixed rings — nodes DON'T move
+// Only the orbit ring indicator (a moving dot) rotates
+const rings = [
   {
     id: 'inner',
-    radius: 90, // px from center
-    duration: 20, // seconds for full rotation
+    radius: 90,
+    duration: 20,
     agents: [
-      {
-        id: 'architect',
-        Icon: ArchitectIcon,
-        label: 'Architect',
-        description: 'System design and stack selection — planning before the first line of code.',
-        angle: 0
-      },
-      {
-        id: 'frontend',
-        Icon: FrontendIcon,
-        label: 'Frontend',
-        description: 'Interface development — responsive, accessible, pixel-perfect execution.',
-        angle: 120
-      },
-      {
-        id: 'backend',
-        Icon: BackendIcon,
-        label: 'Backend',
-        description: 'APIs, databases, and authentication — the engine under the hood.',
-        angle: 240
-      },
+      { id: 'architect', Icon: ArchitectIcon, label: 'Architect', description: 'System design and stack selection — planning before the first line of code.', angle: 0 },
+      { id: 'frontend', Icon: FrontendIcon, label: 'Frontend', description: 'Interface development — responsive, accessible, pixel-perfect execution.', angle: 120 },
+      { id: 'backend', Icon: BackendIcon, label: 'Backend', description: 'APIs, databases, and authentication — the engine under the hood.', angle: 240 },
     ],
   },
   {
@@ -52,27 +33,9 @@ const orbitRings = [
     radius: 150,
     duration: 30,
     agents: [
-      {
-        id: 'security',
-        Icon: SecurityIcon,
-        label: 'Security',
-        description: 'Audit, harden, and protect — security by design, not afterthought.',
-        angle: 0
-      },
-      {
-        id: 'devops',
-        Icon: DevOpsIcon,
-        label: 'DevOps',
-        description: 'Deploy, scale, and monitor — infrastructure that just works.',
-        angle: 120
-      },
-      {
-        id: 'data',
-        Icon: DataIcon,
-        label: 'Data',
-        description: 'Analytics, pipelines, and insights — turning data into decisions.',
-        angle: 240
-      },
+      { id: 'security', Icon: SecurityIcon, label: 'Security', description: 'Security hardening and vulnerability detection — every build.', angle: 60 },
+      { id: 'devops', Icon: DevOpsIcon, label: 'DevOps', description: 'Deploy, scale, and monitor — infrastructure that just works.', angle: 180 },
+      { id: 'data', Icon: DataIcon, label: 'Data', description: 'Analytics, pipelines, and insights — turning data into decisions.', angle: 300 },
     ],
   },
   {
@@ -80,255 +43,204 @@ const orbitRings = [
     radius: 210,
     duration: 45,
     agents: [
-      {
-        id: 'qa',
-        Icon: QAIcon,
-        label: 'QA',
-        description: 'Test, verify, and validate — quality without the bottleneck.',
-        angle: 0
-      },
-      {
-        id: 'pm',
-        Icon: PMIcon,
-        label: 'PM',
-        description: 'Scope, prioritize, and track — product management that ships.',
-        angle: 180
-      },
+      { id: 'qa', Icon: QAIcon, label: 'QA', description: 'Automated testing and quality gates — nothing ships broken.', angle: 90 },
+      { id: 'pm', Icon: PMIcon, label: 'PM', description: 'Coordination and prioritization — the fleet stays on target.', angle: 270 },
     ],
   },
 ];
 
-// Convert polar coordinates to cartesian
-function polarToCartesian(angle: number, radius: number) {
-  const rad = (angle - 90) * (Math.PI / 180); // -90 to start from top
-  return {
-    x: Math.cos(rad) * radius,
-    y: Math.sin(rad) * radius,
-  };
+// Convert angle + radius to x/y from center (0,0)
+function toXY(angleDeg: number, radius: number) {
+  const rad = (angleDeg - 90) * (Math.PI / 180);
+  return { x: Math.cos(rad) * radius, y: Math.sin(rad) * radius };
 }
 
-interface AgentNodeProps {
-  agent: typeof orbitRings[0]['agents'][0];
-  isPaused: boolean;
+interface NodeProps {
+  Icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  description: string;
+  x: number;
+  y: number;
+  centerX: number;
+  centerY: number;
 }
 
-function AgentNode({ agent, isPaused }: AgentNodeProps) {
-  const [isHovered, setIsHovered] = useState(false);
-  const Icon = agent.Icon;
+function AgentNode({ Icon, label, description, x, y, centerX, centerY }: NodeProps) {
+  const [hovered, setHovered] = useState(false);
 
   return (
     <div
-      className="absolute"
+      className="absolute z-10"
       style={{
-        left: '50%',
-        top: '50%',
-        transform: `translate(-50%, -50%)`,
+        left: centerX + x - 22,
+        top: centerY + y - 22,
+        width: 44,
+        height: 44,
       }}
     >
       {/* Tooltip */}
-      {isHovered && (
-        <motion.div
-          initial={{ opacity: 0, y: 10, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 10, scale: 0.95 }}
-          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 z-50"
-        >
-          <div className="glass rounded-xl px-4 py-3 border border-neon-purple/30 whitespace-nowrap">
-            <p className="text-sm text-white font-medium">{agent.label}</p>
-            <p className="text-xs text-zinc-400 max-w-[200px] whitespace-normal mt-1">
-              {agent.description}
-            </p>
-          </div>
-          {/* Arrow */}
-          <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1">
-            <div className="w-2 h-2 bg-night-800 border-r border-b border-neon-purple/30 rotate-45" />
-          </div>
-        </motion.div>
-      )}
-
-      {/* Agent Node - 44px × 44px */}
-      <motion.div
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        whileHover={{ scale: 1.15, zIndex: 10 }}
-        className={`
-          relative w-11 h-11 rounded-full
-          flex items-center justify-center
-          cursor-pointer
-          transition-all duration-300
-          glass border border-white/10 hover:border-neon-cyan/40
-          ${isHovered ? 'shadow-[0_0_30px_rgba(34,211,238,0.3)]' : ''}
-        `}
-      >
-        {/* Status dot */}
-        <div className="absolute -top-1 -right-1">
-          <div className="relative">
-            <div className="h-2 w-2 rounded-full bg-neon-cyan" />
-            <div
-              className="absolute inset-0 rounded-full bg-neon-cyan animate-ping"
-              style={{ animationDuration: '2s' }}
-            />
-          </div>
-        </div>
-
-        {/* Icon */}
-        {Icon && (
-          <Icon className="h-5 w-5 text-cyan-400 group-hover:text-white transition-colors" />
+      <AnimatePresence>
+        {hovered && (
+          <motion.div
+            initial={{ opacity: 0, y: 6, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 6, scale: 0.95 }}
+            transition={{ duration: 0.15 }}
+            className="absolute z-50 pointer-events-none"
+            style={{ bottom: '100%', left: '50%', transform: 'translateX(-50%)', marginBottom: 10 }}
+          >
+            <div className="glass rounded-xl px-3 py-2 border border-purple-500/30 text-center" style={{ minWidth: 140 }}>
+              <p className="text-xs font-semibold text-white mb-1">{label}</p>
+              <p className="text-xs text-zinc-400 leading-relaxed" style={{ maxWidth: 160 }}>{description}</p>
+            </div>
+          </motion.div>
         )}
-      </motion.div>
+      </AnimatePresence>
 
-      {/* Label - always horizontal, positioned below icon */}
-      <div
-        className="absolute text-xs font-medium whitespace-nowrap text-zinc-400"
+      {/* Node circle */}
+      <motion.div
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        whileHover={{ scale: 1.2 }}
+        className="w-11 h-11 rounded-full flex items-center justify-center cursor-pointer relative"
         style={{
-          top: '100%',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          marginTop: '8px',
+          background: 'rgba(15, 15, 25, 0.8)',
+          border: hovered ? '1px solid rgba(139, 92, 246, 0.6)' : '1px solid rgba(255,255,255,0.1)',
+          boxShadow: hovered ? '0 0 20px rgba(34, 211, 238, 0.3)' : 'none',
+          transition: 'border-color 0.2s, box-shadow 0.2s',
         }}
       >
-        {agent.label}
+        {/* Status dot */}
+        <div className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-cyan-400">
+          <div className="absolute inset-0 rounded-full bg-cyan-400 animate-ping" style={{ animationDuration: '2s' }} />
+        </div>
+        <Icon className="h-4 w-4 text-cyan-400" />
+      </motion.div>
+
+      {/* Label — always below, never rotated */}
+      <div
+        className="absolute text-xs font-medium text-zinc-400 whitespace-nowrap pointer-events-none"
+        style={{
+          top: 48,
+          left: '50%',
+          transform: 'translateX(-50%)',
+        }}
+      >
+        {label}
       </div>
     </div>
   );
 }
 
 export function AgentOrbit() {
-  const [isPaused, setIsPaused] = useState(false);
+  const size = 480;
+  const center = size / 2;
 
   return (
     <div className="flex flex-col items-center">
-      <div
-        className="relative mx-auto"
-        style={{ width: 500, height: 500 }}
-        onMouseEnter={() => setIsPaused(true)}
-        onMouseLeave={() => setIsPaused(false)}
-      >
+      <div className="relative overflow-visible" style={{ width: '100%', maxWidth: size, height: size }}>
+
         {/* Background radial glow */}
         <div
-          className="absolute inset-0 rounded-full pointer-events-none"
-          style={{
-            background: 'radial-gradient(circle at center, rgba(139, 92, 246, 0.15) 0%, transparent 70%)',
-          }}
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: 'radial-gradient(circle at center, rgba(139, 92, 246, 0.12) 0%, transparent 65%)' }}
         />
 
-        {/* Center: Cyprus - 56px × 56px */}
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
-          <motion.div
-            animate={{
-              boxShadow: [
-                '0 0 30px rgba(139, 92, 246, 0.4), 0 0 60px rgba(139, 92, 246, 0.2)',
-                '0 0 50px rgba(139, 92, 246, 0.6), 0 0 100px rgba(139, 92, 246, 0.3)',
-                '0 0 30px rgba(139, 92, 246, 0.4), 0 0 60px rgba(139, 92, 246, 0.2)',
-              ]
-            }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-            className="w-14 h-14 rounded-full flex items-center justify-center"
-            style={{
-              background: 'linear-gradient(135deg, #9333ea 0%, #06b6d4 100%)',
-            }}
-          >
-            <CyprusIcon className="h-7 w-7 text-cyan-400" />
-          </motion.div>
-          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-3 text-sm font-semibold text-white whitespace-nowrap">
-            Cyprus
-          </div>
-        </div>
-
-        {/* Orbit Rings */}
-        {orbitRings.map((ring, ringIndex) => (
+        {/* Static orbit rings */}
+        {rings.map((ring) => (
           <div
             key={ring.id}
-            className="absolute left-1/2 top-1/2"
-            style={{ 
-              width: ring.radius * 2, 
+            className="absolute rounded-full pointer-events-none"
+            style={{
+              width: ring.radius * 2,
               height: ring.radius * 2,
-              transform: 'translate(-50%, -50%)',
+              left: center - ring.radius,
+              top: center - ring.radius,
+              border: '1px solid rgba(100, 116, 139, 0.35)',
+              boxShadow: '0 0 12px rgba(139, 92, 246, 0.08) inset',
+            }}
+          />
+        ))}
+
+        {/* Animated dot on each ring — the only thing that rotates */}
+        {rings.map((ring) => (
+          <div
+            key={`dot-${ring.id}`}
+            className="absolute pointer-events-none"
+            style={{
+              width: ring.radius * 2,
+              height: ring.radius * 2,
+              left: center - ring.radius,
+              top: center - ring.radius,
+              animation: `spin-${ring.id} ${ring.duration}s linear infinite`,
             }}
           >
-            {/* Ring border - more visible with slate color and subtle glow */}
+            {/* Single dot at top of ring */}
             <div
-              className="absolute inset-0 rounded-full border border-slate-600/40"
-              style={{
-                animation: `orbitRotate${ringIndex + 1} ${ring.duration}s linear infinite`,
-                animationPlayState: isPaused ? 'paused' : 'running',
-                boxShadow: '0 0 20px rgba(139, 92, 246, 0.1) inset',
-              }}
+              className="absolute rounded-full bg-cyan-400/60"
+              style={{ width: 5, height: 5, left: ring.radius - 2.5, top: -2.5 }}
             />
-
-            {/* Agents on this ring */}
-            {ring.agents.map((agent) => {
-              const pos = polarToCartesian(agent.angle, ring.radius);
-              return (
-                <div
-                  key={agent.id}
-                  className="absolute"
-                  style={{
-                    left: '50%',
-                    top: '50%',
-                    width: 0,
-                    height: 0,
-                    transform: `translate(${pos.x}px, ${pos.y}px)`,
-                  }}
-                >
-                  {/* Counter-rotate wrapper to keep agent and label upright */}
-                  <div
-                    style={{
-                      animation: `counterRotate${ringIndex + 1} ${ring.duration}s linear infinite`,
-                      animationPlayState: isPaused ? 'paused' : 'running',
-                    }}
-                  >
-                    <AgentNode
-                      agent={agent}
-                      isPaused={isPaused}
-                    />
-                  </div>
-                </div>
-              );
-            })}
           </div>
         ))}
 
-        {/* CSS Keyframes - unique for each ring duration */}
+        {/* CSS for ring dot rotation */}
         <style jsx>{`
-          @keyframes orbitRotate1 {
-            from { transform: translate(-50%, -50%) rotate(0deg); }
-            to { transform: translate(-50%, -50%) rotate(360deg); }
-          }
-          @keyframes counterRotate1 {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(-360deg); }
-          }
-          @keyframes orbitRotate2 {
-            from { transform: translate(-50%, -50%) rotate(0deg); }
-            to { transform: translate(-50%, -50%) rotate(360deg); }
-          }
-          @keyframes counterRotate2 {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(-360deg); }
-          }
-          @keyframes orbitRotate3 {
-            from { transform: translate(-50%, -50%) rotate(0deg); }
-            to { transform: translate(-50%, -50%) rotate(360deg); }
-          }
-          @keyframes counterRotate3 {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(-360deg); }
-          }
+          @keyframes spin-inner { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+          @keyframes spin-middle { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+          @keyframes spin-outer { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         `}</style>
+
+        {/* Cyprus center node */}
+        <div
+          className="absolute z-20"
+          style={{ left: center - 28, top: center - 28 }}
+        >
+          <motion.div
+            animate={{
+              boxShadow: [
+                '0 0 20px rgba(34,211,238,0.5), 0 0 40px rgba(34,211,238,0.25)',
+                '0 0 35px rgba(34,211,238,0.8), 0 0 70px rgba(34,211,238,0.4)',
+                '0 0 20px rgba(34,211,238,0.5), 0 0 40px rgba(34,211,238,0.25)',
+              ]
+            }}
+            transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+            className="w-14 h-14 rounded-full flex items-center justify-center"
+            style={{ background: 'linear-gradient(135deg, #0891b2 0%, #22d3ee 100%)' }}
+          >
+            <CyprusIcon className="h-7 w-7 text-white" />
+          </motion.div>
+          <div className="text-xs font-semibold text-white text-center mt-2 whitespace-nowrap">Cyprus</div>
+        </div>
+
+        {/* Agent nodes — stationary, positioned by angle */}
+        {rings.map((ring) =>
+          ring.agents.map((agent) => {
+            const { x, y } = toXY(agent.angle, ring.radius);
+            return (
+              <AgentNode
+                key={agent.id}
+                Icon={agent.Icon}
+                label={agent.label}
+                description={agent.description}
+                x={x}
+                y={y}
+                centerX={center}
+                centerY={center}
+              />
+            );
+          })
+        )}
       </div>
 
-      {/* PM and Docs as compact pills below the orbit */}
-      <div className="flex items-center justify-center gap-3 mt-4">
-        <span className="text-xs text-zinc-500">Also in your fleet:</span>
-        <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900/60 border border-slate-700 text-xs text-slate-400">
-          <DocsIcon className="h-3.5 w-3.5" />
-          Docs
-        </span>
-        <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900/60 border border-slate-700 text-xs text-slate-400">
-          <PMIcon className="h-3.5 w-3.5" />
-          PM
-        </span>
+      {/* Pills below */}
+      <div className="flex items-center justify-center gap-3 mt-2">
+        <span className="text-xs text-zinc-600">Also in your fleet:</span>
+        {[{ Icon: DocsIcon, label: 'Docs' }, { Icon: PMIcon, label: 'PM' }].map(({ Icon, label }) => (
+          <span key={label} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs text-slate-400" style={{ background: 'rgba(15,15,25,0.6)', border: '1px solid rgba(100,116,139,0.3)' }}>
+            <Icon className="h-3.5 w-3.5" />
+            {label}
+          </span>
+        ))}
       </div>
     </div>
   );
