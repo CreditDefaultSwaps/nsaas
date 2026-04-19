@@ -1,95 +1,143 @@
-import { requireAuth } from '@/lib/clerk';
-import { supabaseAdmin } from '@/lib/supabase';
+'use client';
 
-export default async function ReposPage() {
-  const user = await requireAuth();
+import useSWR from 'swr';
+import { fetchRepos } from '@/lib/api';
+import { Button, Card, CardContent, EmptyState, Skeleton, Badge } from '@/components/ui';
+import { Github, ExternalLink, Plus, AlertCircle, Moon } from '@/components/icons';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { motion } from 'framer-motion';
 
-  const { data: repos } = await supabaseAdmin
-    .from('repos')
-    .select('*')
-    .eq('org_id', user.org_id)
-    .order('full_name');
+export default function ReposPage() {
+  return (
+    <ErrorBoundary>
+      <ReposContent />
+    </ErrorBoundary>
+  );
+}
 
-  const hasGitHubApp = user.organizations?.github_app_installation_id;
+function ReposContent() {
+  const { data: repos, error, isLoading, mutate } = useSWR('repos', fetchRepos);
+
+  if (error) {
+    return (
+      <div className="glass rounded-xl border border-rose-500/20 p-8 text-center">
+        <AlertCircle className="mx-auto h-8 w-8 text-rose-400 mb-4" />
+        <h3 className="text-lg font-medium text-rose-400">Night Interrupted</h3>
+        <p className="text-rose-400/70 mt-2">{error.message}</p>
+        <Button variant="outline" className="mt-4 border-rose-500/30" onClick={() => mutate()}>
+          Try Again
+        </Button>
+      </div>
+    );
+  }
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-8">
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Repositories</h1>
-          <p className="text-gray-600 mt-1">
-            Connect your GitHub repositories to start building features
+          <h1 className="text-2xl font-bold text-white">Repositories</h1>
+          <p className="text-zinc-400 mt-1">
+            Connect your codebases for overnight shipping
           </p>
         </div>
+        <Button className="gap-2 neon-glow" onClick={handleConnectRepo}>
+          <Plus className="h-4 w-4" />
+          Connect Repository
+        </Button>
       </div>
 
-      {!hasGitHubApp ? (
-        <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            Connect GitHub
-          </h3>
-          <p className="text-gray-600 mb-4">
-            Install the NSaaS GitHub App to access your repositories
-          </p>
-          <a
-            href={`https://github.com/apps/nsaas/installations/new?state=${user.org_id}`}
-            className="inline-flex items-center px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition"
-          >
-            <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 0C4.477 0 0 4.484 0 10.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0020 10.017C20 4.484 15.522 0 10 0z" clipRule="evenodd" />
-            </svg>
-            Install GitHub App
-          </a>
-        </div>
-      ) : repos?.length === 0 ? (
-        <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            No repositories found
-          </h3>
-          <p className="text-gray-600 mb-4">
-            Select repositories during GitHub App installation or add them in GitHub
-          </p>
-          <a
-            href={`https://github.com/apps/nsaas/installations/${hasGitHubApp}`}
-            className="inline-flex items-center px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition"
-          >
-            Manage Repositories
-          </a>
+      {/* Repos List */}
+      {isLoading ? (
+        <ReposSkeleton />
+      ) : repos && repos.length > 0 ? (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {repos.map((repo: any, index: number) => (
+            <motion.div
+              key={repo.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
+            >
+              <Card className="glass glass-hover group">
+                <CardContent className="p-5">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/5 border border-white/10">
+                        <Github className="h-5 w-5 text-zinc-400" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-white">{repo.name}</h3>
+                        <p className="text-sm text-zinc-500">{repo.full_name}</p>
+                      </div>
+                    </div>
+                    <Badge variant="success">Active</Badge>
+                  </div>
+                  
+                  <div className="mt-4 pt-4 border-t border-white/10">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-zinc-500">Default branch</span>
+                      <span className="text-zinc-300 font-mono text-xs">{repo.default_branch}</span>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1 gap-2 border-white/10 hover:border-neon-cyan/50 hover:text-neon-cyan"
+                      onClick={() => window.open(`https://github.com/${repo.full_name}`, '_blank')}
+                    >
+                      View on GitHub
+                      <ExternalLink className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
         </div>
       ) : (
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-            <h3 className="font-medium text-gray-900">
-              {repos.length} Connected {repos.length === 1 ? 'Repository' : 'Repositories'}
-            </h3>
-            <a
-              href={`https://github.com/apps/nsaas/installations/${hasGitHubApp}`}
-              className="text-sm text-blue-600 hover:text-blue-800"
-            >
-              Manage in GitHub →
-            </a>
-          </div>
-          <ul className="divide-y divide-gray-200">
-            {repos.map((repo) => (
-              <li key={repo.id} className="px-6 py-4 flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-900">{repo.full_name}</p>
-                  <p className="text-sm text-gray-500">
-                    Default branch: {repo.default_branch}
-                  </p>
-                </div>
-                <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                  repo.is_active 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-gray-100 text-gray-800'
-                }`}>
-                  {repo.is_active ? 'Active' : 'Inactive'}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <EmptyState
+          icon={<Github className="h-8 w-8" />}
+          title="No repositories connected"
+          description="Connect your GitHub repositories to start shipping while you sleep."
+          action={{
+            label: 'Connect Repository',
+            onClick: handleConnectRepo,
+          }}
+        />
       )}
+    </div>
+  );
+}
+
+function handleConnectRepo() {
+  // TODO: Implement GitHub OAuth flow
+  alert('GitHub OAuth integration coming soon! For now, repos are added via the database.');
+}
+
+function ReposSkeleton() {
+  return (
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {[1, 2, 3].map((i) => (
+        <Card key={i} className="glass">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-10 w-10 rounded-xl" />
+                <div>
+                  <Skeleton className="h-5 w-32 mb-1" />
+                  <Skeleton className="h-4 w-24" />
+                </div>
+              </div>
+              <Skeleton className="h-5 w-14" />
+            </div>
+            <Skeleton className="h-px w-full my-4" />
+            <Skeleton className="h-4 w-full" />
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 }

@@ -1,34 +1,29 @@
-import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from './supabase';
 
+// Demo user for development (always returns demo user for now)
+const demoUser = {
+  id: '00000000-0000-0000-0000-000000000002',
+  org_id: '00000000-0000-0000-0000-000000000001',
+  clerk_id: 'demo-user',
+  email: 'demo@nsaas.dev',
+  full_name: 'Demo User',
+  role: 'admin',
+  organizations: {
+    id: '00000000-0000-0000-0000-000000000001',
+    name: 'Demo Org',
+    slug: 'demo-org',
+    plan: 'starter'
+  }
+};
+
 export async function getCurrentUser() {
-  const { userId } = await auth();
-  
-  if (!userId) {
-    return null;
-  }
-
-  const { data: user, error } = await supabaseAdmin
-    .from('users')
-    .select('*, organizations(*)')
-    .eq('clerk_id', userId)
-    .single();
-
-  if (error || !user) {
-    return null;
-  }
-
-  return user;
+  // Always return demo user for now
+  return demoUser;
 }
 
 export async function requireAuth() {
-  const user = await getCurrentUser();
-  
-  if (!user) {
-    throw new Error('Unauthorized');
-  }
-
-  return user;
+  // Always return demo user for now
+  return demoUser;
 }
 
 export async function syncUserWithClerk(clerkUser: {

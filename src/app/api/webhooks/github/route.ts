@@ -121,7 +121,7 @@ async function handlePullRequestEvent(data: any) {
   if (!feature) return;
 
   // Update feature status based on PR action
-  let status = 'in_progress';
+  let status: 'in_progress' | 'completed' | 'failed' = 'in_progress';
   if (action === 'closed' && pull_request.merged) {
     status = 'completed';
   } else if (action === 'closed') {

@@ -15,12 +15,7 @@ export async function GET(request: NextRequest) {
     // Get next queued build
     const { data: build, error } = await supabaseAdmin
       .from('builds')
-      .select(`
-        *,
-        features(*),
-        organizations(github_app_installation_id),
-        repos(*)
-      `)
+      .select('*')
       .eq('status', 'queued')
       .order('created_at', { ascending: true })
       .limit(1)
@@ -30,8 +25,34 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ build: null });
     }
 
+    // Get related data
+    const { data: feature } = await supabaseAdmin
+      .from('features')
+      .select('*')
+      .eq('id', build.feature_id)
+      .single();
+
+    const { data: org } = await supabaseAdmin
+      .from('organizations')
+      .select('github_app_installation_id')
+      .eq('id', build.org_id)
+      .single();
+
+    const { data: repo } = await supabaseAdmin
+      .from('repos')
+      .select('*')
+      .eq('id', feature?.repo_id || '')
+      .single();
+
+    if (!feature || !org || !repo) {
+      return NextResponse.json(
+        { error: 'Missing related data' },
+        { status: 400 }
+      );
+    }
+
     // Get GitHub token
-    const installationId = build.organizations?.github_app_installation_id;
+    const installationId = org.github_app_installation_id;
     if (!installationId) {
       return NextResponse.json(
         { error: 'GitHub app not installed' },
@@ -42,13 +63,13 @@ export async function GET(request: NextRequest) {
     const token = await getInstallationToken(parseInt(installationId));
 
     // Create branch
-    const [owner, repo] = build.repos.full_name.split('/');
+    const [owner, repoName] = repo.full_name.split('/');
     await createBranch(
       parseInt(installationId),
       owner,
-      repo,
-      build.repos.default_branch,
-      build.features.branch_name
+      repoName,
+      repo.default_branch,
+      feature.branch_name || ''
     );
 
     // Update build status
@@ -72,10 +93,18 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       build: {
         id: build.id,
-        feature: build.features,
-        repo: build.repos,
+        feature: {
+          id: feature.id,
+          title: feature.title,
+          description: feature.description,
+          branch_name: feature.branch_name || '',
+        },
+        repo: {
+          id: repo.id,
+          full_name: repo.full_name,
+          default_branch: repo.default_branch,
+        },
         token,
-        branch_name: build.features.branch_name,
       },
     });
   } catch (error: any) {
@@ -118,7 +147,9 @@ export async function POST(request: NextRequest) {
 
     // Update build status if provided
     if (status) {
-      const updates: any = { status };
+      const updates: { status: 'queued' | 'running' | 'success' | 'failed' | 'cancelled'; completed_at?: string } = { 
+        status: status as 'queued' | 'running' | 'success' | 'failed' | 'cancelled'
+      };
       if (['success', 'failed', 'cancelled'].includes(status)) {
         updates.completed_at = new Date().toISOString();
       }

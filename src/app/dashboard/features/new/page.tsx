@@ -1,143 +1,222 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import useSWR from 'swr';
+import toast from 'react-hot-toast';
+import { createFeature } from '@/lib/api';
+import { fetchRepos } from '@/lib/api';
+import { Button, Card, CardContent, Input, Textarea, Select, SelectItem, EmptyState, Skeleton } from '@/components/ui';
+import { ChevronLeft, Github, AlertCircle, Moon, Stars, Sparkles } from '@/components/icons';
+import Link from 'next/link';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { motion } from 'framer-motion';
 
-export default function NewFeaturePage() {
+interface FormErrors {
+  repo_id?: string;
+  title?: string;
+  description?: string;
+}
+
+export default function NewRequestPage() {
+  return (
+    <ErrorBoundary>
+      <NewRequestContent />
+    </ErrorBoundary>
+  );
+}
+
+function NewRequestContent() {
   const router = useRouter();
-  const [repos, setRepos] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const { data: repos, isLoading: reposLoading } = useSWR('repos', fetchRepos);
+  
   const [formData, setFormData] = useState({
     repo_id: '',
     title: '',
     description: '',
-    priority: 'medium',
+    priority: 'medium' as const,
   });
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    fetch('/api/repos')
-      .then(res => res.json())
-      .then(data => setRepos(data.repos || []));
-  }, []);
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
+    
+    if (!formData.repo_id) {
+      newErrors.repo_id = 'Please select a repository';
+    }
+    if (!formData.title.trim()) {
+      newErrors.title = 'Title is required';
+    } else if (formData.title.length < 3) {
+      newErrors.title = 'Title must be at least 3 characters';
+    }
+    if (!formData.description.trim()) {
+      newErrors.description = 'Description is required';
+    } else if (formData.description.length < 10) {
+      newErrors.description = 'Description must be at least 10 characters';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError('');
+    
+    if (!validateForm()) return;
 
+    setIsSubmitting(true);
+    
     try {
-      const res = await fetch('/api/features', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to create feature');
-      }
-
+      await createFeature(formData);
+      toast.success('Request submitted! Your night shift is starting...');
       router.push('/dashboard');
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+    } catch (error: any) {
+      toast.error(error.message || 'Night interrupted. Please try again.');
+      setIsSubmitting(false);
     }
   };
 
+  // No repos state
+  if (!reposLoading && (!repos || repos.length === 0)) {
+    return (
+      <div className="max-w-2xl mx-auto">
+        <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-white mb-6 transition-colors">
+          <ChevronLeft className="h-4 w-4" />
+          Back to Dashboard
+        </Link>
+        
+        <EmptyState
+          icon={<Github className="h-8 w-8" />}
+          title="No repositories connected"
+          description="Connect a repository to start your first night shift."
+          action={{
+            label: 'Connect Repository',
+            onClick: () => router.push('/dashboard/repos'),
+          }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Create New Feature</h1>
+      <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-white mb-6 transition-colors">
+        <ChevronLeft className="h-4 w-4" />
+        Back to Dashboard
+      </Link>
 
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
-          {error}
-        </div>
-      )}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <Card className="glass neon-border">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-neon-purple to-neon-cyan flex items-center justify-center">
+                <Moon className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-white">New Request</h1>
+                <p className="text-sm text-zinc-400">Describe what you want. We'll ship it overnight.</p>
+              </div>
+            </div>
+            
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Repository Select */}
+              <div>
+                <label className="block text-sm font-medium text-zinc-300 mb-2">
+                  Repository <span className="text-rose-400">*</span>
+                </label>
+                {reposLoading ? (
+                  <Skeleton className="h-10 w-full" />
+                ) : (
+                  <Select
+                    value={formData.repo_id}
+                    onChange={(e) => setFormData({ ...formData, repo_id: e.target.value })}
+                    error={errors.repo_id}
+                  >
+                    <SelectItem value="">Select a repository...</SelectItem>
+                    {repos?.map((repo: any) => (
+                      <SelectItem key={repo.id} value={repo.id}>
+                        {repo.full_name}
+                      </SelectItem>
+                    ))}
+                  </Select>
+                )}
+              </div>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg border border-gray-200 p-6 space-y-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Repository *
-          </label>
-          <select
-            required
-            value={formData.repo_id}
-            onChange={(e) => setFormData({ ...formData, repo_id: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="">Select a repository</option>
-            {repos.map((repo) => (
-              <option key={repo.id} value={repo.id}>
-                {repo.full_name}
-              </option>
-            ))}
-          </select>
-        </div>
+              {/* Title Input */}
+              <div>
+                <label className="block text-sm font-medium text-zinc-300 mb-2">
+                  Title <span className="text-rose-400">*</span>
+                </label>
+                <Input
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  placeholder="e.g., Add user authentication with OAuth"
+                  error={errors.title}
+                />
+              </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Title *
-          </label>
-          <input
-            type="text"
-            required
-            value={formData.title}
-            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            placeholder="e.g., Add user authentication with OAuth"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
-        </div>
+              {/* Priority Select */}
+              <div>
+                <label className="block text-sm font-medium text-zinc-300 mb-2">
+                  Priority
+                </label>
+                <Select
+                  value={formData.priority}
+                  onChange={(e) => setFormData({ ...formData, priority: e.target.value as any })}
+                >
+                  <SelectItem value="low">Low - Ship when convenient</SelectItem>
+                  <SelectItem value="medium">Medium - Standard priority</SelectItem>
+                  <SelectItem value="high">High - Ship tonight</SelectItem>
+                  <SelectItem value="urgent">Urgent - Start immediately</SelectItem>
+                </Select>
+              </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Description *
-          </label>
-          <textarea
-            required
-            rows={6}
-            value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            placeholder="Describe the feature in detail. What should it do? How should it work? Any specific requirements?"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
-        </div>
+              {/* Description Textarea */}
+              <div>
+                <label className="block text-sm font-medium text-zinc-300 mb-2">
+                  Description <span className="text-rose-400">*</span>
+                </label>
+                <Textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Describe what you want in detail. The more specific, the better the result."
+                  rows={6}
+                  error={errors.description}
+                />
+                <div className="mt-2 flex items-start gap-2 text-sm text-zinc-500">
+                  <Sparkles className="h-4 w-4 mt-0.5 flex-shrink-0 text-neon-cyan" />
+                  <p>
+                    Pro tip: Be specific! Instead of "fix the bug", try "fix the login error when users enter special characters in passwords".
+                  </p>
+                </div>
+              </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Priority
-          </label>
-          <select
-            value={formData.priority}
-            onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
-            <option value="urgent">Urgent</option>
-          </select>
-        </div>
-
-        <div className="flex gap-4 pt-4">
-          <button
-            type="button"
-            onClick={() => router.push('/dashboard')}
-            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={loading}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
-          >
-            {loading ? 'Creating...' : 'Create Feature'}
-          </button>
-        </div>
-      </form>
+              {/* Submit Buttons */}
+              <div className="flex items-center justify-end gap-4 pt-4 border-t border-white/10">
+                <Link href="/dashboard">
+                  <Button type="button" variant="ghost">
+                    Cancel
+                  </Button>
+                </Link>
+                <Button 
+                  type="submit" 
+                  isLoading={isSubmitting}
+                  disabled={reposLoading}
+                  className="gap-2"
+                >
+                  <Stars className="h-4 w-4" />
+                  Start Night Shift
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 }

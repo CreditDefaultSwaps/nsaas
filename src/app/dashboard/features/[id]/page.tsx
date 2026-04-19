@@ -1,169 +1,354 @@
-import { requireAuth } from '@/lib/clerk';
-import { supabaseAdmin } from '@/lib/supabase';
-import Link from 'next/link';
-import { notFound } from 'next/navigation';
+'use client';
 
-interface FeaturePageProps {
+import { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
+import useSWR from 'swr';
+import { fetchFeature, fetchBuilds, fetchBuildEvents, createBuildLogsEventSource } from '@/lib/api';
+import { Button, Card, CardContent, StatusBadge, Skeleton, Badge } from '@/components/ui';
+import { ChevronLeft, ExternalLink, Terminal, Clock, AlertCircle, Github, Moon, Stars } from '@/components/icons';
+import { formatDateTime, formatDuration } from '@/lib/utils';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { BuildEvent } from '@/types';
+import { motion } from 'framer-motion';
+import { MoonPhaseLoader } from '@/components/ui/loading-spinner';
+
+interface PageProps {
   params: { id: string };
 }
 
-export default async function FeaturePage({ params }: FeaturePageProps) {
-  const user = await requireAuth();
+export default function RequestDetailPage({ params }: PageProps) {
+  return (
+    <ErrorBoundary>
+      <RequestDetailContent requestId={params.id} />
+    </ErrorBoundary>
+  );
+}
 
-  const { data: feature } = await supabaseAdmin
-    .from('features')
-    .select(`
-      *,
-      repos(name, full_name),
-      users(full_name, email)
-    `)
-    .eq('id', params.id)
-    .eq('org_id', user.org_id)
-    .single();
+function RequestDetailContent({ requestId }: { requestId: string }) {
+  const { data: feature, error: featureError, isLoading: featureLoading } = useSWR(
+    ['feature', requestId],
+    () => fetchFeature(requestId),
+    { refreshInterval: 5000 }
+  );
+  
+  const { data: builds, error: buildsError } = useSWR(
+    ['builds', requestId],
+    () => fetchBuilds(requestId)
+  );
 
-  if (!feature) {
-    notFound();
+  const build = builds?.[0];
+  const error = featureError || buildsError;
+
+  if (error) {
+    return (
+      <div className="glass rounded-xl border border-rose-500/20 p-8 text-center">
+        <AlertCircle className="mx-auto h-8 w-8 text-rose-400 mb-4" />
+        <h3 className="text-lg font-medium text-rose-400">Night Interrupted</h3>
+        <p className="text-rose-400/70 mt-2">{error.message}</p>
+        <Link href="/dashboard">
+          <Button variant="outline" className="mt-4">
+            Back to Dashboard
+          </Button>
+        </Link>
+      </div>
+    );
   }
 
-  const { data: builds } = await supabaseAdmin
-    .from('builds')
-    .select(`
-      *,
-      build_events(*)
-    `)
-    .eq('feature_id', params.id)
-    .order('created_at', { ascending: false });
+  if (featureLoading) {
+    return <RequestDetailSkeleton />;
+  }
 
-  const statusColors: Record<string, string> = {
-    pending: 'bg-gray-100 text-gray-800',
-    in_progress: 'bg-blue-100 text-blue-800',
-    building: 'bg-yellow-100 text-yellow-800',
-    testing: 'bg-purple-100 text-purple-800',
-    completed: 'bg-green-100 text-green-800',
-    failed: 'bg-red-100 text-red-800',
-  };
+  if (!feature) {
+    return (
+      <div className="text-center py-12">
+        <h3 className="text-lg font-medium text-white">Request not found</h3>
+        <Link href="/dashboard">
+          <Button variant="outline" className="mt-4">
+            Back to Dashboard
+          </Button>
+        </Link>
+      </div>
+    );
+  }
 
-  const buildStatusColors: Record<string, string> = {
-    queued: 'bg-gray-100 text-gray-800',
-    running: 'bg-blue-100 text-blue-800',
-    success: 'bg-green-100 text-green-800',
-    failed: 'bg-red-100 text-red-800',
-    cancelled: 'bg-gray-100 text-gray-600',
+  return (
+    <div className="space-y-8">
+      {/* Header */}
+      <div>
+        <Link 
+          href="/dashboard" 
+          className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-white mb-4 transition-colors"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          Back to Requests
+        </Link>
+        
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-white">{feature.title}</h1>
+            <div className="flex items-center gap-2 mt-2 text-sm text-zinc-500">
+              <Github className="h-4 w-4" />
+              <span>{feature.repos?.full_name}</span>
+              <span>•</span>
+              <span>Created {formatDateTime(feature.created_at)}</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <StatusBadge status={feature.status} />
+            <StatusBadge status={feature.priority} />
+          </div>
+        </div>
+      </div>
+
+      {/* Description */}
+      <Card className="glass">
+        <CardContent className="p-6">
+          <h2 className="text-sm font-medium text-zinc-400 mb-3">Description</h2>
+          <p className="text-white whitespace-pre-wrap">{feature.description}</p>
+        </CardContent>
+      </Card>
+
+      {/* Shift Status */}
+      {build && (
+        <Card className="glass">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neon-purple/20 border border-neon-purple/30">
+                  <Terminal className="h-5 w-5 text-neon-cyan" />
+                </div>
+                <div>
+                  <h2 className="font-medium text-white">Shift Status</h2>
+                  <p className="text-sm text-zinc-500">
+                    {build.status === 'running' ? 'Working through the night...' : `Shift ${build.status}`}
+                  </p>
+                </div>
+              </div>
+              <StatusBadge status={build.status} />
+            </div>
+
+            {/* Shift Stats */}
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="glass rounded-lg p-4">
+                <p className="text-sm text-zinc-500">Duration</p>
+                <p className="text-lg font-medium text-white mt-1">
+                  {build.started_at 
+                    ? formatDuration(
+                        build.completed_at 
+                          ? (new Date(build.completed_at).getTime() - new Date(build.started_at).getTime()) / 1000 / 60
+                          : (Date.now() - new Date(build.started_at).getTime()) / 1000 / 60
+                      )
+                    : '-'
+                  }
+                </p>
+              </div>
+              <div className="glass rounded-lg p-4">
+                <p className="text-sm text-zinc-500">PR Number</p>
+                <p className="text-lg font-medium text-white mt-1">
+                  {build.pr_number ? `#${build.pr_number}` : '-'}
+                </p>
+              </div>
+              <div className="glass rounded-lg p-4">
+                <p className="text-sm text-zinc-500">Branch</p>
+                <p className="text-lg font-medium text-white mt-1 truncate" title={feature.branch_name || ''}>
+                  {feature.branch_name ? feature.branch_name.split('/').pop() : '-'}
+                </p>
+              </div>
+            </div>
+
+            {/* Shift Logs */}
+            <ShiftLogs buildId={build.id} status={build.status} />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Actions */}
+      {feature.pr_url && (
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex gap-4"
+        >
+          <a
+            href={feature.pr_url}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Button className="gap-2 neon-glow">
+              <Stars className="h-4 w-4" />
+              View Pull Request
+              <ExternalLink className="h-4 w-4" />
+            </Button>
+          </a>
+        </motion.div>
+      )}
+    </div>
+  );
+}
+
+function ShiftLogs({ buildId, status }: { buildId: string; status: string }) {
+  const [events, setEvents] = useState<BuildEvent[]>([]);
+  const [isLive, setIsLive] = useState(false);
+  const logsEndRef = useRef<HTMLDivElement>(null);
+
+  // Fetch historical events
+  const { data: historicalEvents } = useSWR(
+    ['build-events', buildId],
+    () => fetchBuildEvents(buildId)
+  );
+
+  useEffect(() => {
+    if (historicalEvents) {
+      setEvents(historicalEvents);
+    }
+  }, [historicalEvents]);
+
+  // Connect to SSE for live logs
+  useEffect(() => {
+    if (!buildId || !['queued', 'running'].includes(status)) return;
+
+    setIsLive(true);
+    const eventSource = createBuildLogsEventSource(buildId);
+
+    eventSource.addEventListener('log', (e: MessageEvent) => {
+      const event = JSON.parse(e.data);
+      setEvents(prev => [...prev, event]);
+    });
+
+    eventSource.addEventListener('status_change', (e: MessageEvent) => {
+      const event = JSON.parse(e.data);
+      setEvents(prev => [...prev, event]);
+    });
+
+    eventSource.addEventListener('error', (e: MessageEvent) => {
+      const event = JSON.parse(e.data);
+      setEvents(prev => [...prev, event]);
+    });
+
+    eventSource.addEventListener('completion', (e: MessageEvent) => {
+      const event = JSON.parse(e.data);
+      setEvents(prev => [...prev, event]);
+      setIsLive(false);
+      eventSource.close();
+    });
+
+    eventSource.addEventListener('complete', () => {
+      setIsLive(false);
+      eventSource.close();
+    });
+
+    eventSource.onerror = () => {
+      setIsLive(false);
+      eventSource.close();
+    };
+
+    return () => {
+      eventSource.close();
+      setIsLive(false);
+    };
+  }, [buildId, status]);
+
+  // Auto-scroll to bottom
+  useEffect(() => {
+    logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [events]);
+
+  const getEventIcon = (type: string) => {
+    switch (type) {
+      case 'log': return '›';
+      case 'status_change': return '◆';
+      case 'error': return '✕';
+      case 'completion': return '✓';
+      default: return '•';
+    }
   };
 
   return (
     <div>
-      <div className="mb-6">
-        <Link
-          href="/dashboard"
-          className="text-sm text-blue-600 hover:text-blue-800"
-        >
-          ← Back to Features
-        </Link>
-      </div>
-
-      <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
-        <div className="flex justify-between items-start mb-4">
-          <h1 className="text-2xl font-bold text-gray-900">{feature.title}</h1>
-          <span className={`px-3 py-1 text-sm font-medium rounded-full ${statusColors[feature.status]}`}>
-            {feature.status.replace('_', ' ')}
-          </span>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4 text-sm mb-6">
-          <div>
-            <span className="text-gray-500">Repository:</span>
-            <span className="ml-2 text-gray-900">{(feature.repos as any)?.full_name}</span>
-          </div>
-          <div>
-            <span className="text-gray-500">Priority:</span>
-            <span className="ml-2 text-gray-900 capitalize">{feature.priority}</span>
-          </div>
-          <div>
-            <span className="text-gray-500">Created by:</span>
-            <span className="ml-2 text-gray-900">{(feature.users as any)?.full_name || (feature.users as any)?.email}</span>
-          </div>
-          <div>
-            <span className="text-gray-500">Created:</span>
-            <span className="ml-2 text-gray-900">
-              {new Date(feature.created_at).toLocaleString()}
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-medium text-zinc-400">Shift Logs</h3>
+        {isLive && (
+          <div className="flex items-center gap-2 text-xs text-neon-cyan">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-neon-cyan opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-neon-cyan"></span>
             </span>
+            Live
           </div>
-          {feature.branch_name && (
-            <div>
-              <span className="text-gray-500">Branch:</span>
-              <span className="ml-2 font-mono text-gray-900">{feature.branch_name}</span>
-            </div>
-          )}
-          {feature.pr_url && (
-            <div>
-              <span className="text-gray-500">PR:</span>
-              <a
-                href={feature.pr_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="ml-2 text-blue-600 hover:text-blue-800"
-              >
-                View on GitHub →
-              </a>
-            </div>
-          )}
-        </div>
-
-        <div>
-          <h3 className="text-sm font-medium text-gray-700 mb-2">Description</h3>
-          <p className="text-gray-900 whitespace-pre-wrap">{feature.description}</p>
-        </div>
+        )}
       </div>
-
-      <h2 className="text-xl font-bold text-gray-900 mb-4">Build History</h2>
-
-      {builds?.length === 0 ? (
-        <div className="bg-gray-50 rounded-lg p-6 text-center text-gray-500">
-          No builds yet for this feature
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {builds?.map((build) => (
-            <div key={build.id} className="bg-white rounded-lg border border-gray-200 p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <span className="text-sm text-gray-500">Build ID:</span>
-                  <span className="ml-2 font-mono text-sm">{build.id.slice(0, 8)}</span>
-                </div>
-                <span className={`px-2 py-1 text-xs font-medium rounded-full ${buildStatusColors[build.status]}`}>
-                  {build.status}
+      
+      <div className="rounded-xl bg-night-900 border border-white/10 p-4 h-96 overflow-y-auto font-mono text-sm">
+        {events.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-zinc-600">
+            <Moon className="h-8 w-8 mb-2 opacity-50" />
+            <p>Waiting for the night shift to begin...</p>
+          </div>
+        ) : (
+          <div className="space-y-1">
+            {events.map((event, index) => (
+              <div
+                key={`${event.id}-${index}`}
+                className={`flex gap-3 ${
+                  event.event_type === 'error'
+                    ? 'text-rose-400'
+                    : event.event_type === 'completion'
+                    ? 'text-emerald-400'
+                    : event.event_type === 'status_change'
+                    ? 'text-neon-cyan'
+                    : 'text-zinc-400'
+                }`}
+              >
+                <span className="text-zinc-700 shrink-0">
+                  {new Date(event.created_at).toLocaleTimeString()}
                 </span>
+                <span className="shrink-0 text-zinc-600">{getEventIcon(event.event_type)}</span>
+                <span className="break-all">{event.message}</span>
               </div>
+            ))}
+            {isLive && (
+              <div className="flex items-center gap-2 text-neon-cyan animate-pulse">
+                <span className="text-zinc-700">{new Date().toLocaleTimeString()}</span>
+                <span className="text-zinc-600">›</span>
+                <span>Working...</span>
+              </div>
+            )}
+            <div ref={logsEndRef} />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
-              {(build.build_events as any[])?.length > 0 && (
-                <div className="mt-4">
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">Events</h4>
-                  <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto">
-                    <pre className="text-sm text-gray-300 font-mono">
-                      {(build.build_events as any[])
-                        .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
-                        .map(e => `[${new Date(e.created_at).toISOString()}] ${e.event_type}: ${e.message}`)
-                        .join('\n')}
-                    </pre>
-                  </div>
-                </div>
-              )}
+function RequestDetailSkeleton() {
+  return (
+    <div className="space-y-8">
+      <div>
+        <Skeleton className="h-4 w-32 mb-4" />
+        <Skeleton className="h-8 w-96 mb-2" />
+        <Skeleton className="h-4 w-64" />
+      </div>
+      
+      <Card className="glass">
+        <CardContent className="p-6">
+          <Skeleton className="h-4 w-24 mb-3" />
+          <Skeleton className="h-20 w-full" />
+        </CardContent>
+      </Card>
 
-              {build.agent_logs && (
-                <div className="mt-4">
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">Agent Logs</h4>
-                  <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto max-h-96 overflow-y-auto">
-                    <pre className="text-sm text-gray-300 font-mono whitespace-pre-wrap">
-                      {build.agent_logs}
-                    </pre>
-                  </div>
-                </div>
-              )}
+      <Card className="glass">
+        <CardContent className="p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <Skeleton className="h-10 w-10 rounded-xl" />
+            <div>
+              <Skeleton className="h-5 w-32 mb-1" />
+              <Skeleton className="h-4 w-24" />
             </div>
-          ))}
-        </div>
-      )}
+          </div>
+          <Skeleton className="h-64 w-full rounded-xl" />
+        </CardContent>
+      </Card>
     </div>
   );
 }

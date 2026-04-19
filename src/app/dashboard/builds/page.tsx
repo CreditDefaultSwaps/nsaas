@@ -1,114 +1,152 @@
-import { requireAuth } from '@/lib/clerk';
-import { supabaseAdmin } from '@/lib/supabase';
+'use client';
+
 import Link from 'next/link';
+import useSWR from 'swr';
+import { fetchBuilds } from '@/lib/api';
+import { Card, CardContent, StatusBadge, EmptyState, Skeleton } from '@/components/ui';
+import { Terminal, Clock, AlertCircle, Moon, ArrowRight } from '@/components/icons';
+import { formatDateTime, formatDuration } from '@/lib/utils';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { motion } from 'framer-motion';
 
-export default async function BuildsPage() {
-  const user = await requireAuth();
+export default function ActiveShiftsPage() {
+  return (
+    <ErrorBoundary>
+      <ActiveShiftsContent />
+    </ErrorBoundary>
+  );
+}
 
-  const { data: builds } = await supabaseAdmin
-    .from('builds')
-    .select(`
-      *,
-      features(title, repo_id, repos(name, full_name))
-    `)
-    .eq('org_id', user.org_id)
-    .order('created_at', { ascending: false });
+function ActiveShiftsContent() {
+  const { data: builds, error, isLoading, mutate } = useSWR('builds', fetchBuilds, {
+    refreshInterval: 5000,
+  });
 
-  const statusColors: Record<string, string> = {
-    queued: 'bg-gray-100 text-gray-800',
-    running: 'bg-blue-100 text-blue-800',
-    success: 'bg-green-100 text-green-800',
-    failed: 'bg-red-100 text-red-800',
-    cancelled: 'bg-gray-100 text-gray-600',
-  };
+  if (error) {
+    return (
+      <div className="glass rounded-xl border border-rose-500/20 p-8 text-center">
+        <AlertCircle className="mx-auto h-8 w-8 text-rose-400 mb-4" />
+        <h3 className="text-lg font-medium text-rose-400">Night Interrupted</h3>
+        <p className="text-rose-400/70 mt-2">{error.message}</p>
+      </div>
+    );
+  }
+
+  // Calculate stats
+  const activeCount = builds?.filter((b: any) => ['queued', 'running'].includes(b.status)).length || 0;
+  const shippedCount = builds?.filter((b: any) => b.status === 'success').length || 0;
 
   return (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Builds</h1>
-        <p className="text-gray-600 mt-1">
-          Track the status of your AI-powered builds
-        </p>
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Active Shifts</h1>
+          <p className="text-zinc-400 mt-1">
+            Monitor your AI team's progress through the night
+          </p>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="glass rounded-lg px-4 py-2 text-center">
+            <div className="text-2xl font-bold text-neon-cyan">{activeCount}</div>
+            <div className="text-xs text-zinc-500">Active</div>
+          </div>
+          <div className="glass rounded-lg px-4 py-2 text-center">
+            <div className="text-2xl font-bold text-emerald-400">{shippedCount}</div>
+            <div className="text-xs text-zinc-500">Shipped</div>
+          </div>
+        </div>
       </div>
 
-      {builds?.length === 0 ? (
-        <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            No builds yet
-          </h3>
-          <p className="text-gray-600 mb-4">
-            Create a feature request to trigger your first build
-          </p>
-          <Link
-            href="/dashboard/features/new"
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-          >
-            Create Feature
-          </Link>
+      {/* Shifts List */}
+      {isLoading ? (
+        <ShiftsSkeleton />
+      ) : builds && builds.length > 0 ? (
+        <div className="space-y-3">
+          {builds.map((build: any, index: number) => (
+            <motion.div
+              key={build.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
+            >
+              <Link href={`/dashboard/features/${build.feature_id}`}>
+                <Card className="glass glass-hover cursor-pointer group">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${
+                          build.status === 'running' 
+                            ? 'bg-neon-cyan/20 border border-neon-cyan/30' 
+                            : build.status === 'success'
+                            ? 'bg-emerald-500/20 border border-emerald-500/30'
+                            : 'bg-white/5 border border-white/10'
+                        }`}>
+                          {build.status === 'running' ? (
+                            <Moon className="h-5 w-5 text-neon-cyan animate-pulse" />
+                          ) : (
+                            <Terminal className="h-5 w-5 text-zinc-400" />
+                          )}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-medium text-white group-hover:text-neon-cyan transition-colors">
+                              {build.features?.title || 'Unknown Request'}
+                            </h3>
+                            <StatusBadge status={build.status} />
+                          </div>
+                          <div className="flex items-center gap-4 mt-1 text-sm text-zinc-500">
+                            <span className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {build.started_at 
+                                ? formatDuration(
+                                    build.completed_at 
+                                      ? (new Date(build.completed_at).getTime() - new Date(build.started_at).getTime()) / 1000 / 60
+                                      : (Date.now() - new Date(build.started_at).getTime()) / 1000 / 60
+                                  )
+                                : 'Queued'
+                              }
+                            </span>
+                            <span>•</span>
+                            <span>{formatDateTime(build.created_at)}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <ArrowRight className="h-5 w-5 text-zinc-600 group-hover:text-neon-cyan transition-colors" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            </motion.div>
+          ))}
         </div>
       ) : (
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Feature
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Repository
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Started
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Duration
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {builds?.map((build) => {
-                const duration = build.started_at && build.completed_at
-                  ? Math.round((new Date(build.completed_at).getTime() - new Date(build.started_at).getTime()) / 1000 / 60)
-                  : build.started_at
-                  ? Math.round((Date.now() - new Date(build.started_at).getTime()) / 1000 / 60)
-                  : null;
-
-                return (
-                  <tr key={build.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
-                      <Link
-                        href={`/dashboard/features/${build.feature_id}`}
-                        className="text-sm font-medium text-blue-600 hover:text-blue-800"
-                      >
-                        {(build.features as any)?.title}
-                      </Link>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {(build.features as any)?.repos?.full_name}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusColors[build.status]}`}>
-                        {build.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {build.started_at
-                        ? new Date(build.started_at).toLocaleString()
-                        : 'Not started'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {duration !== null ? `${duration}m` : '-'}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <EmptyState
+          icon={<Moon className="h-8 w-8" />}
+          title="No shifts yet"
+          description="Your night shifts will appear here when you submit requests."
+        />
       )}
+    </div>
+  );
+}
+
+function ShiftsSkeleton() {
+  return (
+    <div className="space-y-3">
+      {[1, 2, 3].map((i) => (
+        <Card key={i} className="glass">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-4">
+              <Skeleton className="h-10 w-10 rounded-xl" />
+              <div className="flex-1">
+                <Skeleton className="h-5 w-48 mb-2" />
+                <Skeleton className="h-4 w-32" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { syncUserWithClerk } from '@/lib/clerk';
 
-const webhookSecret = process.env.CLERK_WEBHOOK_SECRET!;
+const webhookSecret = process.env.CLERK_WEBHOOK_SECRET || 'placeholder';
 
 export async function POST(request: Request) {
   const payload = await request.json();

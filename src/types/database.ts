@@ -9,6 +9,48 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      waitlist: {
+        Row: {
+          id: string;
+          first_name: string;
+          last_name: string;
+          company_name: string | null;
+          email: string;
+          status: 'pending' | 'approved' | 'invited' | 'paid';
+          source: string;
+          stripe_customer_id: string | null;
+          stripe_subscription_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          first_name: string;
+          last_name: string;
+          company_name?: string | null;
+          email: string;
+          status?: 'pending' | 'approved' | 'invited' | 'paid';
+          source?: string;
+          stripe_customer_id?: string | null;
+          stripe_subscription_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          first_name?: string;
+          last_name?: string;
+          company_name?: string | null;
+          email?: string;
+          status?: 'pending' | 'approved' | 'invited' | 'paid';
+          source?: string;
+          stripe_customer_id?: string | null;
+          stripe_subscription_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       organizations: {
         Row: {
           id: string;
@@ -34,6 +76,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       users: {
         Row: {
@@ -69,6 +112,15 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [
+          {
+            foreignKeyName: 'users_org_id_fkey';
+            columns: ['org_id'];
+            isOneToOne: false;
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          }
+        ];
       };
       repos: {
         Row: {
@@ -104,6 +156,15 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [
+          {
+            foreignKeyName: 'repos_org_id_fkey';
+            columns: ['org_id'];
+            isOneToOne: false;
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          }
+        ];
       };
       features: {
         Row: {
@@ -148,6 +209,22 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [
+          {
+            foreignKeyName: 'features_org_id_fkey';
+            columns: ['org_id'];
+            isOneToOne: false;
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'features_repo_id_fkey';
+            columns: ['repo_id'];
+            isOneToOne: false;
+            referencedRelation: 'repos';
+            referencedColumns: ['id'];
+          }
+        ];
       };
       builds: {
         Row: {
@@ -189,6 +266,22 @@ export interface Database {
           pr_number?: number | null;
           commit_sha?: string | null;
         };
+        Relationships: [
+          {
+            foreignKeyName: 'builds_feature_id_fkey';
+            columns: ['feature_id'];
+            isOneToOne: false;
+            referencedRelation: 'features';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'builds_org_id_fkey';
+            columns: ['org_id'];
+            isOneToOne: false;
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          }
+        ];
       };
       build_events: {
         Row: {
@@ -215,6 +308,15 @@ export interface Database {
           metadata?: Json | null;
           created_at?: string;
         };
+        Relationships: [
+          {
+            foreignKeyName: 'build_events_build_id_fkey';
+            columns: ['build_id'];
+            isOneToOne: false;
+            referencedRelation: 'builds';
+            referencedColumns: ['id'];
+          }
+        ];
       };
     };
     Views: {
@@ -224,6 +326,9 @@ export interface Database {
       [_ in never]: never;
     };
     Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
       [_ in never]: never;
     };
   };
