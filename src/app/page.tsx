@@ -309,13 +309,16 @@ export default function Home() {
       </section>
 
       {/* How The Fleet Works Section */}
-      <section id="fleet" className="relative py-24 border-t border-white/5 overflow-hidden">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <section id="fleet" className="relative py-24 overflow-hidden">
+        <div className="h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent" />
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative">
+          {/* Section Number */}
+          <span className="absolute top-8 left-8 text-xs font-mono tracking-widest text-zinc-600 uppercase">01</span>
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-8"
+            className="text-center mb-8 pt-8"
           >
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
               Not One AI. A Coordinated Swarm.
@@ -365,14 +368,18 @@ export default function Home() {
 
       {/* The Fleet Advantage Section - Billboard Slabs */}
       <section id="how-it-works" className="relative py-0">
+        {/* Section Number */}
+        <span className="absolute top-8 left-8 text-xs font-mono tracking-widest text-zinc-600 uppercase z-10">02</span>
+        
         {/* Slab 1 - Left aligned with cyan accent */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="relative py-16 px-8 md:px-16 bg-gradient-to-r from-cyan-500/5 to-transparent border-t border-white/5"
+          className="relative py-16 px-8 md:px-16 bg-gradient-to-r from-cyan-500/5 to-transparent"
         >
+          <div className="h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent absolute top-0 left-0 right-0" />
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center">
               <div className="border-l-4 border-cyan-500 pl-8 flex-1">
@@ -391,7 +398,8 @@ export default function Home() {
         </motion.div>
 
         {/* Animated Counter */}
-        <div className="py-8 flex justify-center border-t border-white/5">
+        <div className="py-8 flex justify-center relative">
+          <div className="h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent absolute top-0 left-0 right-0" />
           <IdeasCounter />
         </div>
 
@@ -401,8 +409,9 @@ export default function Home() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="relative py-16 px-8 md:px-16 bg-gradient-to-l from-purple-500/5 to-transparent border-t border-white/5"
+          className="relative py-16 px-8 md:px-16 bg-gradient-to-l from-purple-500/5 to-transparent"
         >
+          <div className="h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent absolute top-0 left-0 right-0" />
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center flex-row-reverse">
               <div className="border-r-4 border-purple-500 pr-8 flex-1 text-right">
@@ -426,8 +435,9 @@ export default function Home() {
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
-          className="py-16 px-8 border-t border-white/5"
+          className="py-16 px-8 relative"
         >
+          <div className="h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent absolute top-0 left-0 right-0" />
           <div className="max-w-2xl mx-auto text-center">
             <div className="text-6xl text-cyan-400 leading-none mb-4">"</div>
             <p className="text-xl md:text-2xl text-zinc-300 mb-6 leading-relaxed">
@@ -445,9 +455,10 @@ export default function Home() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="relative py-16 px-8 md:px-16 border-t border-cyan-500/30"
+          className="relative py-16 px-8 md:px-16"
           style={{ background: 'radial-gradient(ellipse at center, rgba(34, 211, 238, 0.05) 0%, transparent 70%)' }}
         >
+          <div className="h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent absolute top-0 left-0 right-0" />
           <div className="max-w-4xl mx-auto text-center">
             <h3 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
               The bottleneck was never your idea.
@@ -467,6 +478,7 @@ export default function Home() {
 
       {/* Product Proof — Terminal Mockup Section */}
       <section className="relative py-24">
+        <div className="h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent absolute top-0 left-0 right-0" />
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -486,7 +498,8 @@ export default function Home() {
       </section>
 
       {/* Differentiation Section */}
-      <section className="relative py-24 border-t border-white/5">
+      <section className="relative py-24">
+        <div className="h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent absolute top-0 left-0 right-0" />
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -600,7 +613,8 @@ export default function Home() {
       </section>
 
       {/* Testimonials Section */}
-      <section className="relative py-24 border-t border-white/5">
+      <section className="relative py-24">
+        <div className="h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent absolute top-0 left-0 right-0" />
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -642,7 +656,8 @@ export default function Home() {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="relative py-24 border-t border-white/5">
+      <section id="pricing" className="relative py-24">
+        <div className="h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent absolute top-0 left-0 right-0" />
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -718,7 +733,8 @@ export default function Home() {
       </section>
 
       {/* Waitlist Section */}
-      <section id="waitlist" className="relative py-24 border-t border-white/5">
+      <section id="waitlist" className="relative py-24">
+        <div className="h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent absolute top-0 left-0 right-0" />
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -748,7 +764,8 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-white/5 py-12">
+      <footer className="relative py-12">
+        <div className="h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent absolute top-0 left-0 right-0" />
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
             {/* Left: Logo + Tagline */}
