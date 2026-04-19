@@ -3,11 +3,9 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui';
-import { Logo, LogoWordmark } from '@/components/logo';
+import { Logo } from '@/components/logo';
 import { WaitlistForm } from '@/components/WaitlistForm';
 import { WaitlistCounter } from '@/components/WaitlistCounter';
-import { PRGallery } from '@/components/PRGallery';
-import { FeatureDemos } from '@/components/FeatureDemos';
 import { 
   Moon, 
   Zap, 
@@ -16,14 +14,17 @@ import {
   Clock,
   Shield,
   Rocket,
-  TrendingUp,
-  Users,
-  Code2,
-  CheckCircle2,
+  Globe,
+  Database,
+  MessageCircle,
+  RefreshCw,
   Check,
-  Cpu,
-  TrendingDown,
-  ZapIcon
+  Building2,
+  Users,
+  Bot,
+  Send,
+  Server,
+  Code
 } from 'lucide-react';
 
 const containerVariants = {
@@ -49,45 +50,45 @@ const itemVariants = {
   },
 };
 
-// Pricing data
+// Pricing data - renamed tiers
 const pricingPlans = [
   {
-    name: 'Starter',
+    name: 'Idea',
     price: '$49',
     period: '/mo',
-    description: 'Perfect for solo founders and small projects',
+    description: 'Perfect for testing concepts and building MVPs',
     features: [
-      '5 shifts per month',
-      '1 repository',
+      '5 products per month',
+      'Your own codebase',
+      'Your own domain',
       'Email support',
-      'Private builds',
     ],
     cta: 'Get Started',
     popular: false,
   },
   {
-    name: 'Pro',
+    name: 'Builder',
     price: '$149',
     period: '/mo',
-    description: 'For teams shipping multiple features per week',
+    description: 'For founders shipping multiple products',
     features: [
-      '20 shifts per month',
-      'Unlimited repositories',
+      '20 products per month',
       'Priority queue',
+      'Custom domains',
       'Slack alerts',
       'Dedicated support',
     ],
-    cta: 'Start Free Trial',
+    cta: 'Start Building',
     popular: true,
   },
   {
-    name: 'Enterprise',
+    name: 'Fleet',
     price: '$499',
     period: '/mo',
-    description: 'Custom solutions for large organizations',
+    description: 'Unlimited products for power founders',
     features: [
-      'Unlimited shifts',
-      'Custom agents',
+      'Unlimited products',
+      'Custom infrastructure',
       'SLA guarantee',
       'White-glove onboarding',
       'Dedicated account manager',
@@ -97,25 +98,51 @@ const pricingPlans = [
   },
 ];
 
-// Why Now data
-const whyNowPoints = [
+// What you get features
+const whatYouGet = [
   {
-    icon: Cpu,
-    title: 'AI agents went mainstream',
-    subtitle: '2025',
-    description: 'The technology finally works. Agents can reason, code, and ship autonomously.',
+    icon: Globe,
+    title: 'A live URL',
+    description: 'Not a prototype. A real deployed product with your own domain.',
   },
   {
-    icon: TrendingUp,
-    title: 'Engineering costs hit all-time highs',
-    subtitle: 'Talent shortage',
-    description: 'Senior engineers command $200K+ salaries. The gap between demand and supply keeps widening.',
+    icon: Code,
+    title: 'Your own codebase',
+    description: 'GitHub repo, fully yours. No lock-in. Take it anywhere.',
   },
   {
-    icon: ZapIcon,
-    title: 'The best founders ship faster than anyone',
-    subtitle: 'Speed wins',
-    description: 'Markets move in days, not quarters. The founders who iterate fastest capture the most value.',
+    icon: Server,
+    title: 'Your own infrastructure',
+    description: 'Vercel + Supabase + your domain. You control everything.',
+  },
+  {
+    icon: Send,
+    title: 'Morning delivery',
+    description: 'Telegram message with your new product link when you wake up.',
+  },
+  {
+    icon: RefreshCw,
+    title: 'Unlimited revisions',
+    description: 'Describe what to change. Next morning, it\'s done.',
+  },
+];
+
+// Testimonials (updated for non-technical founders)
+const testimonials = [
+  {
+    quote: "I described my marketplace idea before bed. Woke up to a working product with Stripe payments. I don't know how to code—this felt like magic.",
+    author: "Sarah Chen",
+    role: "Founder, MarketFind",
+  },
+  {
+    quote: "Night Shift built my SaaS dashboard while I was sleeping. I own the code, the domain, everything. No agency could match this speed.",
+    author: "Marcus Johnson",
+    role: "Solo Founder",
+  },
+  {
+    quote: "I went from idea to live product in 24 hours. The morning Telegram message is now my favorite notification.",
+    author: "Elena Rodriguez",
+    role: "Founder, TaskFlow",
   },
 ];
 
@@ -138,12 +165,12 @@ export default function Home() {
               >
                 How it Works
               </a>
-              <Link
-                href="/builds"
+              <a
+                href="#what-you-get"
                 className="text-sm text-zinc-400 hover:text-white transition-colors"
               >
-                Live Builds
-              </Link>
+                What You Get
+              </a>
               <a
                 href="#pricing"
                 className="text-sm text-zinc-400 hover:text-white transition-colors"
@@ -152,12 +179,6 @@ export default function Home() {
               </a>
             </div>
             <div className="flex items-center gap-4">
-              <Link
-                href="/dashboard"
-                className="text-sm text-zinc-400 hover:text-white transition-colors"
-              >
-                Log In
-              </Link>
               <a
                 href="#waitlist"
                 className="text-sm px-4 py-2 rounded-lg bg-gradient-to-r from-neon-cyan to-cyan-400 text-night-900 font-semibold hover:from-cyan-300 hover:to-cyan-200 transition-all"
@@ -185,8 +206,8 @@ export default function Home() {
             {/* Badge */}
             <motion.div variants={itemVariants} className="mb-8">
               <div className="inline-flex items-center gap-2 rounded-full glass px-4 py-2">
-                <TrendingUp className="h-4 w-4 text-neon-cyan" />
-                <span className="text-sm text-zinc-300">Ship 10x Faster Without Hiring</span>
+                <Shield className="h-4 w-4 text-neon-cyan" />
+                <span className="text-sm text-zinc-300">No code required. No lock-in. No waiting.</span>
               </div>
             </motion.div>
 
@@ -195,9 +216,9 @@ export default function Home() {
               variants={itemVariants}
               className="text-5xl md:text-7xl font-bold tracking-tight text-white mb-6"
             >
-              A fleet of AI engineers.
+              You have the idea.
               <br />
-              <span className="gradient-text">Working while you sleep.</span>
+              <span className="gradient-text">We build the software.</span>
             </motion.h1>
 
             {/* Subheadline */}
@@ -205,8 +226,8 @@ export default function Home() {
               variants={itemVariants}
               className="mx-auto max-w-2xl text-lg md:text-xl text-zinc-400 mb-10"
             >
-              Stop waiting on engineering. Describe what you need, and our AI team ships 
-              production-ready code overnight. No hiring. No backlog. Just shipped features.
+              Describe what you need tonight. Wake up to a live product tomorrow. 
+              Your code. Your domain. Yours forever.
             </motion.p>
 
             {/* CTA Buttons */}
@@ -217,7 +238,7 @@ export default function Home() {
               <a href="#waitlist">
                 <Button size="lg" className="gap-2 neon-glow animate-glow-pulse">
                   <Rocket className="h-5 w-5" />
-                  Join the Waitlist
+                  Describe your first product
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </a>
@@ -232,25 +253,15 @@ export default function Home() {
               <WaitlistCounter />
             </motion.div>
 
-            {/* Pricing Strip */}
-            <motion.div 
-              variants={itemVariants}
-              className="mb-16"
-            >
-              <p className="text-sm text-zinc-500">
-                Starting at <span className="text-zinc-300 font-medium">$49/mo</span> · No credit card required · Cancel anytime
-              </p>
-            </motion.div>
-
             {/* Stats */}
             <motion.div 
               variants={itemVariants}
               className="grid grid-cols-3 gap-8 max-w-2xl mx-auto"
             >
               {[
-                { value: '10x', label: 'Faster Shipping' },
-                { value: '$50K+', label: 'Engineering Savings' },
-                { value: '24/7', label: 'Development' },
+                { value: '8 hrs', label: 'From Idea to Live' },
+                { value: '100%', label: 'You Own Everything' },
+                { value: '24/7', label: 'Fleet Working' },
               ].map((stat) => (
                 <div key={stat.label} className="text-center">
                   <div className="text-3xl md:text-4xl font-bold text-white mb-1">{stat.value}</div>
@@ -262,7 +273,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* How It Works */}
+      {/* How It Works - 3 Steps */}
       <section id="how-it-works" className="relative py-24 border-t border-white/5">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div 
@@ -272,10 +283,10 @@ export default function Home() {
             className="text-center mb-16"
           >
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              From Idea to Revenue in 8 Hours
+              How It Works
             </h2>
             <p className="text-zinc-400 max-w-2xl mx-auto">
-              Stop letting engineering bottlenecks kill your momentum. Night Shift turns your product ideas into shipped code while you focus on growth.
+              No technical knowledge needed. Just describe what you want, and we handle the rest.
             </p>
           </motion.div>
 
@@ -283,20 +294,20 @@ export default function Home() {
             {[
               {
                 icon: Sparkles,
-                title: 'Describe Your Request',
-                description: 'Write what you need in plain English. No technical specs required. Our AI understands intent.',
+                title: 'Describe your idea',
+                description: 'Plain English. No technical specs. Like texting a friend what you want built.',
                 step: '01',
               },
               {
                 icon: Moon,
-                title: 'Go to Sleep',
-                description: 'Our AI engineering team analyzes your codebase, plans the implementation, and starts building.',
+                title: 'The fleet builds overnight',
+                description: 'Your AI team plans, designs, and builds while you sleep. Every night.',
                 step: '02',
               },
               {
                 icon: Rocket,
-                title: 'Wake Up to Shipped Code',
-                description: 'Review the PR, merge, and deploy. Your customers get new features while you were sleeping.',
+                title: 'Wake up to something live',
+                description: 'Your product is deployed. Real URL. You own the code, the domain, the infrastructure.',
                 step: '03',
               },
             ].map((step, index) => (
@@ -324,48 +335,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* PR Gallery */}
-      <PRGallery />
-
-      {/* Founder Section */}
-      <section className="relative py-24 border-t border-white/5">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="flex flex-col md:flex-row items-center gap-12"
-          >
-            {/* Text Content */}
-            <div className="flex-1">
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-                Built by a founder who automated his own engineering team
-              </h2>
-              <div className="space-y-4 text-lg text-zinc-400">
-                <p>
-                  I spent 3 years running a company where engineering was always the bottleneck. Every feature request meant hiring, onboarding, or waiting.
-                </p>
-                <p>
-                  So I built an AI fleet that works while I sleep. No standups. No blockers. Just shipped code every morning.
-                </p>
-                <p className="text-white font-medium">
-                  Night Shift ships more code in one night than most teams ship in a week.
-                </p>
-              </div>
-            </div>
-            
-            {/* Avatar Placeholder */}
-            <div className="flex-shrink-0">
-              <div className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-gradient-to-br from-neon-purple via-purple-500 to-neon-cyan flex items-center justify-center shadow-2xl">
-                <span className="text-4xl md:text-5xl font-bold text-white">AK</span>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Everything You Need */}
-      <section className="relative py-24 border-t border-white/5">
+      {/* What You Get Section */}
+      <section id="what-you-get" className="relative py-24 border-t border-white/5">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -374,18 +345,35 @@ export default function Home() {
             className="text-center mb-16"
           >
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Everything You Need to Ship Faster
+              What you get
             </h2>
             <p className="text-zinc-400 max-w-2xl mx-auto">
-              Click any feature to see a live demo of how Night Shift works
+              Not prototypes. Real products you own completely.
             </p>
           </motion.div>
 
-          <FeatureDemos />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {whatYouGet.map((item, index) => (
+              <motion.div
+                key={item.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+                className="glass glass-hover rounded-2xl p-6"
+              >
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-neon-purple/20 to-neon-cyan/20 flex items-center justify-center mb-4">
+                  <item.icon className="h-6 w-6 text-neon-cyan" />
+                </div>
+                <h3 className="text-lg font-semibold text-white mb-2">{item.title}</h3>
+                <p className="text-sm text-zinc-400">{item.description}</p>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* Differentiation */}
+      {/* Differentiation Section */}
       <section className="relative py-24 border-t border-white/5">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -394,53 +382,85 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <div className="inline-flex items-center gap-2 rounded-full glass px-4 py-2 mb-6">
-              <Zap className="h-4 w-4 text-neon-cyan" />
-              <span className="text-sm text-zinc-300">Not just another tool</span>
-            </div>
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Linear manages your backlog.
+              While you slept, Bolt made you a prototype.
               <br />
-              <span className="gradient-text">Night Shift empties it.</span>
+              <span className="gradient-text">Night Shift made you a product.</span>
             </h2>
-            <p className="text-zinc-400 max-w-2xl mx-auto">
-              Every other tool helps you manage or assist. Night Shift autonomously builds — no engineers, no standups, no blockers.
-            </p>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               {
-                title: 'Autonomous, not assisted',
-                body: 'Night Shift doesn\'t suggest code — it writes, tests, and ships it. Zero human hands on keyboard.',
+                icon: Bot,
+                title: 'Bolt / Lovable',
+                cons: ['Builds prototypes', 'Owns your code', 'Real-time = you wait'],
               },
               {
-                title: 'Overnight, every night',
-                body: 'Submit before bed. Wake up to a PR. Predictable 8-hour turnaround, 7 nights a week.',
+                icon: Building2,
+                title: 'Agencies',
+                cons: ['Slow (weeks/months)', 'Expensive ($10K+)', 'You lose control'],
               },
               {
-                title: 'Production-ready, not prototype',
-                body: 'TypeScript, tests, your codebase patterns. Code you can merge — not proof-of-concepts you\'ll rewrite.',
+                icon: Moon,
+                title: 'Night Shift',
+                pros: ['Overnight delivery', 'You own everything', 'Keeps improving'],
+                highlight: true,
               },
-            ].map((point, i) => (
+            ].map((col, i) => (
               <motion.div
-                key={point.title}
+                key={col.title}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="glass rounded-2xl p-6"
+                className={`rounded-2xl p-6 ${
+                  col.highlight 
+                    ? 'glass neon-border' 
+                    : 'glass'
+                }`}
               >
-                <div className="w-2 h-2 rounded-full bg-purple-500 mb-4" />
-                <h3 className="text-base font-semibold text-white mb-2">{point.title}</h3>
-                <p className="text-sm text-zinc-400">{point.body}</p>
+                <div className="flex items-center gap-3 mb-6">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                    col.highlight 
+                      ? 'bg-gradient-to-br from-neon-cyan/20 to-neon-purple/20' 
+                      : 'bg-slate-800'
+                  }`}>
+                    <col.icon className={`h-5 w-5 ${col.highlight ? 'text-neon-cyan' : 'text-zinc-400'}`} />
+                  </div>
+                  <h3 className={`text-lg font-semibold ${col.highlight ? 'text-white' : 'text-zinc-300'}`}>
+                    {col.title}
+                  </h3>
+                </div>
+                
+                {'cons' in col && col.cons && (
+                  <ul className="space-y-3">
+                    {col.cons.map((item) => (
+                      <li key={item} className="flex items-center gap-2 text-sm text-zinc-500">
+                        <span className="w-1.5 h-1.5 rounded-full bg-zinc-600" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                
+                {'pros' in col && col.pros && (
+                  <ul className="space-y-3">
+                    {col.pros.map((item) => (
+                      <li key={item} className="flex items-center gap-2 text-sm text-emerald-400">
+                        <Check className="h-4 w-4" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Why Now Section */}
+      {/* Testimonials Section */}
       <section className="relative py-24 border-t border-white/5">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -450,50 +470,35 @@ export default function Home() {
             className="text-center mb-16"
           >
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              The timing has never been better
+              Founders are waking up to products
             </h2>
-            <p className="text-zinc-400 max-w-2xl mx-auto">
-              Three converging trends make Night Shift possible — and necessary — right now.
-            </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-            {whyNowPoints.map((point, index) => (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {testimonials.map((t, i) => (
               <motion.div
-                key={point.title}
+                key={t.author}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className="glass glass-hover rounded-2xl p-8 text-center"
+                transition={{ delay: i * 0.1 }}
+                className="glass glass-hover rounded-2xl p-6"
               >
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-neon-purple/20 to-neon-cyan/20 flex items-center justify-center mx-auto mb-6">
-                  <point.icon className="h-7 w-7 text-neon-cyan" />
+                <p className="text-zinc-300 mb-6 text-sm leading-relaxed">
+                  &ldquo;{t.quote}&rdquo;
+                </p>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-neon-purple/30 to-neon-cyan/30 flex items-center justify-center text-sm font-medium text-white">
+                    {t.author.split(' ').map(n => n[0]).join('')}
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-white">{t.author}</div>
+                    <div className="text-xs text-zinc-500">{t.role}</div>
+                  </div>
                 </div>
-                <div className="text-sm text-neon-purple font-medium mb-2">{point.subtitle}</div>
-                <h3 className="text-xl font-semibold text-white mb-3">{point.title}</h3>
-                <p className="text-zinc-400 text-sm">{point.description}</p>
               </motion.div>
             ))}
           </div>
-
-          {/* Stat Banner */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            className="glass rounded-2xl p-8 md:p-12 text-center"
-          >
-            <div className="text-5xl md:text-6xl font-bold gradient-text mb-4">
-              90%
-            </div>
-            <p className="text-xl text-white font-medium mb-2">
-              AI development costs dropped 90% in 18 months
-            </p>
-            <p className="text-zinc-400">
-              What required a team of engineers in 2024 now runs on a single GPU. The economics have flipped.
-            </p>
-          </motion.div>
         </div>
       </section>
 
@@ -506,11 +511,14 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
+            <p className="text-sm text-zinc-500 mb-4">
+              Starting at <span className="text-zinc-300 font-medium">$49/mo</span> · No credit card required · Cancel anytime
+            </p>
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
               Simple, transparent pricing
             </h2>
             <p className="text-zinc-400 max-w-2xl mx-auto">
-              Start free. Upgrade when you&apos;re ready to ship faster.
+              Start small. Scale as you ship more products.
             </p>
           </motion.div>
 
@@ -567,25 +575,6 @@ export default function Home() {
               </motion.div>
             ))}
           </div>
-
-          {/* All Plans Include */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center"
-          >
-            <p className="text-zinc-400 text-sm">
-              All plans include:{' '}
-              <span className="text-zinc-300">TypeScript</span>
-              <span className="mx-2 text-zinc-600">·</span>
-              <span className="text-zinc-300">Tests</span>
-              <span className="mx-2 text-zinc-600">·</span>
-              <span className="text-zinc-300">GitHub PRs</span>
-              <span className="mx-2 text-zinc-600">·</span>
-              <span className="text-zinc-300">Quality gates</span>
-            </p>
-          </motion.div>
         </div>
       </section>
 
@@ -603,12 +592,12 @@ export default function Home() {
               <div className="inline-flex items-center gap-2 rounded-full bg-amber-500/10 border border-amber-500/20 px-4 py-2 mb-6">
                 <Clock className="h-4 w-4 text-amber-400" />
                 <span className="text-sm text-amber-400 font-medium">
-                  Private beta closes May 15, 2026 · 47 spots remaining
+                  47 founders ahead of you. Beta closes May 15.
                 </span>
               </div>
               
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                Join the Night Shift
+                Join the waitlist. Your first product ships tonight.
               </h2>
               <p className="text-zinc-400 max-w-xl mx-auto">
                 Limited spots available for our private beta. Join the waitlist and be the first to ship while you sleep.
@@ -645,19 +634,14 @@ export default function Home() {
                     </a>
                   </li>
                   <li>
-                    <a href="#pricing" className="text-sm text-zinc-400 hover:text-white transition-colors">
-                      Pricing
+                    <a href="#what-you-get" className="text-sm text-zinc-400 hover:text-white transition-colors">
+                      What You Get
                     </a>
                   </li>
                   <li>
-                    <Link href="/builds" className="text-sm text-zinc-400 hover:text-white transition-colors">
-                      Live Builds
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="/integrations" className="text-sm text-zinc-400 hover:text-white transition-colors">
-                      Integrations
-                    </Link>
+                    <a href="#pricing" className="text-sm text-zinc-400 hover:text-white transition-colors">
+                      Pricing
+                    </a>
                   </li>
                 </ul>
               </div>
