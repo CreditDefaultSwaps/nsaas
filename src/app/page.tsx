@@ -59,69 +59,37 @@ const itemVariants = {
   },
 };
 
-// Agent roster data — aspirational language, continuously expanding
-const agentRoster = [
+// Featured agents (top row - full cards)
+const featuredAgents = [
   {
     icon: Brain,
-    name: 'Architect Agent',
+    name: '🧠 Architect Agent',
     description: 'System design and stack selection — planning before the first line of code.',
     color: 'from-violet-500/20 to-purple-500/20',
   },
   {
     icon: Layout,
-    name: 'Frontend Agent',
+    name: '⚡ Frontend Agent',
     description: 'Interface development — responsive, accessible, pixel-perfect execution.',
     color: 'from-cyan-500/20 to-blue-500/20',
   },
   {
     icon: Wrench,
-    name: 'Backend Agent',
+    name: '🔧 Backend Agent',
     description: 'APIs, databases, and authentication — the engine under the hood.',
     color: 'from-emerald-500/20 to-teal-500/20',
   },
-  {
-    icon: Lock,
-    name: 'Security Agent',
-    description: 'Security hardening and vulnerability detection — every shift.',
-    color: 'from-red-500/20 to-rose-500/20',
-  },
-  {
-    icon: Cloud,
-    name: 'DevOps Agent',
-    description: 'Infrastructure deployment and zero-downtime releases — always live.',
-    color: 'from-orange-500/20 to-amber-500/20',
-  },
-  {
-    icon: BarChart3,
-    name: 'Data Agent',
-    description: 'Analytics, reporting, and dashboards — know what\'s working.',
-    color: 'from-indigo-500/20 to-violet-500/20',
-  },
-  {
-    icon: Search,
-    name: 'QA Agent',
-    description: 'Automated QA and testing across every build — comprehensive coverage.',
-    color: 'from-yellow-500/20 to-orange-500/20',
-  },
-  {
-    icon: FileText,
-    name: 'Docs Agent',
-    description: 'Technical documentation and changelogs — always know what was built.',
-    color: 'from-slate-500/20 to-zinc-500/20',
-  },
-  {
-    icon: Target,
-    name: 'PM Agent',
-    description: 'Fleet coordination and progress reporting — your command center.',
-    color: 'from-fuchsia-500/20 to-pink-500/20',
-  },
-  {
-    icon: Moon,
-    name: 'Cyprus (Lead)',
-    description: 'Fleet orchestration and quality assurance — your direct line to the fleet.',
-    color: 'from-cyan-500/20 to-purple-500/20',
-    isLead: true,
-  },
+];
+
+// Specialist agents (bottom row - pill tags)
+const specialistAgents = [
+  { icon: Lock, name: '🛡️ Security' },
+  { icon: Cloud, name: '🚀 DevOps' },
+  { icon: BarChart3, name: '📊 Data' },
+  { icon: Search, name: '🔍 QA' },
+  { icon: FileText, name: '📝 Docs' },
+  { icon: Target, name: '🎯 PM' },
+  { icon: Moon, name: '🌙 Cyprus' },
 ];
 
 // Pricing data - renamed tiers
@@ -277,7 +245,7 @@ export default function Home() {
               variants={itemVariants}
               className="text-5xl md:text-7xl font-bold tracking-tight text-white mb-6"
             >
-              One founder. One vision.
+              Stop waiting on engineers.
             </motion.h1>
 
             {/* Subheadline */}
@@ -357,24 +325,25 @@ export default function Home() {
             </p>
           </motion.div>
 
-          {/* Agent Grid - Terminal/Command Center Aesthetic */}
-          <div className="relative">
+          {/* Agent Roster - Split Layout */}
+          <div className="relative space-y-8">
             {/* Background grid effect */}
             <div className="absolute inset-0 bg-gradient-to-b from-neon-cyan/5 via-transparent to-transparent rounded-3xl pointer-events-none" />
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-              {agentRoster.map((agent, index) => (
+            {/* TOP ROW: 3 Featured Agents */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {featuredAgents.map((agent, index) => (
                 <motion.div
                   key={agent.name}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: index * 0.05 }}
+                  transition={{ delay: index * 0.1 }}
                   whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
-                  className={`relative glass rounded-xl p-5 border ${agent.isLead ? 'border-neon-cyan/40' : 'border-white/10'} hover:border-neon-cyan/30 transition-all group`}
+                  className="relative glass rounded-2xl p-6 border border-white/10 hover:border-neon-cyan/30 transition-all group"
                 >
                   {/* Status dot - pulsing cyan */}
-                  <div className="absolute top-3 right-3">
+                  <div className="absolute top-4 right-4">
                     <div className="relative">
                       <div className="h-2 w-2 rounded-full bg-neon-cyan" />
                       <div className="absolute inset-0 rounded-full bg-neon-cyan animate-ping" style={{ animationDuration: '2s' }} />
@@ -382,24 +351,51 @@ export default function Home() {
                   </div>
 
                   {/* Icon */}
-                  <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${agent.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                    <agent.icon className={`h-5 w-5 ${agent.isLead ? 'text-neon-cyan' : 'text-white'}`} />
+                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${agent.color} flex items-center justify-center mb-5 group-hover:scale-110 transition-transform`}>
+                    <agent.icon className="h-6 w-6 text-white" />
                   </div>
 
                   {/* Content */}
-                  <h3 className="text-sm font-bold text-white mb-2">{agent.name}</h3>
-                  <p className="text-xs text-zinc-400 leading-relaxed">{agent.description}</p>
-
-                  {/* Lead badge */}
-                  {agent.isLead && (
-                    <div className="mt-3 inline-flex items-center gap-1 text-xs text-neon-cyan font-medium">
-                      <span className="w-1.5 h-1.5 rounded-full bg-neon-cyan animate-pulse" />
-                      Lead Agent
-                    </div>
-                  )}
+                  <h3 className="text-lg font-bold text-white mb-3">{agent.name}</h3>
+                  <p className="text-sm text-zinc-400 leading-relaxed">{agent.description}</p>
                 </motion.div>
               ))}
             </div>
+
+            {/* MIDDLE ROW: Transition text */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.3 }}
+              className="text-center"
+            >
+              <p className="text-sm text-zinc-500">
+                Plus 7 more specialists in your fleet:
+              </p>
+            </motion.div>
+
+            {/* BOTTOM ROW: Specialist Pills */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.4 }}
+              className="flex flex-wrap justify-center gap-3"
+            >
+              {specialistAgents.map((agent, index) => (
+                <motion.div
+                  key={agent.name}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.4 + index * 0.05 }}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/60 border border-slate-700 text-sm text-zinc-300 hover:border-purple-500/40 hover:shadow-[0_0_20px_rgba(139,92,246,0.15)] transition-all cursor-default"
+                >
+                  <span>{agent.name}</span>
+                </motion.div>
+              ))}
+            </motion.div>
           </div>
 
           {/* Fleet Expansion Footer */}
