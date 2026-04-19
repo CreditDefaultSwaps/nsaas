@@ -24,7 +24,16 @@ import {
   Bot,
   Send,
   Server,
-  Code
+  Code,
+  Brain,
+  Layout,
+  Wrench,
+  Lock,
+  Cloud,
+  BarChart3,
+  Search,
+  FileText,
+  Target
 } from 'lucide-react';
 
 const containerVariants = {
@@ -50,11 +59,76 @@ const itemVariants = {
   },
 };
 
+// Agent roster data — aspirational language, continuously expanding
+const agentRoster = [
+  {
+    icon: Brain,
+    name: 'Architect Agent',
+    description: 'System design and stack selection — planning before the first line of code.',
+    color: 'from-violet-500/20 to-purple-500/20',
+  },
+  {
+    icon: Layout,
+    name: 'Frontend Agent',
+    description: 'Interface development — responsive, accessible, pixel-perfect execution.',
+    color: 'from-cyan-500/20 to-blue-500/20',
+  },
+  {
+    icon: Wrench,
+    name: 'Backend Agent',
+    description: 'APIs, databases, and authentication — the engine under the hood.',
+    color: 'from-emerald-500/20 to-teal-500/20',
+  },
+  {
+    icon: Lock,
+    name: 'Security Agent',
+    description: 'Security hardening and vulnerability detection — every shift.',
+    color: 'from-red-500/20 to-rose-500/20',
+  },
+  {
+    icon: Cloud,
+    name: 'DevOps Agent',
+    description: 'Infrastructure deployment and zero-downtime releases — always live.',
+    color: 'from-orange-500/20 to-amber-500/20',
+  },
+  {
+    icon: BarChart3,
+    name: 'Data Agent',
+    description: 'Analytics, reporting, and dashboards — know what\'s working.',
+    color: 'from-indigo-500/20 to-violet-500/20',
+  },
+  {
+    icon: Search,
+    name: 'QA Agent',
+    description: 'Automated QA and testing across every build — comprehensive coverage.',
+    color: 'from-yellow-500/20 to-orange-500/20',
+  },
+  {
+    icon: FileText,
+    name: 'Docs Agent',
+    description: 'Technical documentation and changelogs — always know what was built.',
+    color: 'from-slate-500/20 to-zinc-500/20',
+  },
+  {
+    icon: Target,
+    name: 'PM Agent',
+    description: 'Fleet coordination and progress reporting — your command center.',
+    color: 'from-fuchsia-500/20 to-pink-500/20',
+  },
+  {
+    icon: Moon,
+    name: 'Cyprus (Lead)',
+    description: 'Fleet orchestration and quality assurance — your direct line to the fleet.',
+    color: 'from-cyan-500/20 to-purple-500/20',
+    isLead: true,
+  },
+];
+
 // Pricing data - renamed tiers
 const pricingPlans = [
   {
     name: 'Idea',
-    price: '$49',
+    price: '$99',
     period: '/mo',
     description: 'Perfect for testing concepts and building MVPs',
     features: [
@@ -68,7 +142,7 @@ const pricingPlans = [
   },
   {
     name: 'Builder',
-    price: '$149',
+    price: '$299',
     period: '/mo',
     description: 'For founders shipping multiple products',
     features: [
@@ -83,7 +157,7 @@ const pricingPlans = [
   },
   {
     name: 'Fleet',
-    price: '$499',
+    price: '$999',
     period: '/mo',
     description: 'Unlimited products for power founders',
     features: [
@@ -95,35 +169,6 @@ const pricingPlans = [
     ],
     cta: 'Contact Sales',
     popular: false,
-  },
-];
-
-// What you get features
-const whatYouGet = [
-  {
-    icon: Globe,
-    title: 'A live URL',
-    description: 'Not a prototype. A real deployed product with your own domain.',
-  },
-  {
-    icon: Code,
-    title: 'Your own codebase',
-    description: 'GitHub repo, fully yours. No lock-in. Take it anywhere.',
-  },
-  {
-    icon: Server,
-    title: 'Your own infrastructure',
-    description: 'Vercel + Supabase + your domain. You control everything.',
-  },
-  {
-    icon: Send,
-    title: 'Morning delivery',
-    description: 'Telegram message with your new product link when you wake up.',
-  },
-  {
-    icon: RefreshCw,
-    title: 'Unlimited revisions',
-    description: 'Describe what to change. Next morning, it\'s done.',
   },
 ];
 
@@ -143,6 +188,22 @@ const testimonials = [
     quote: "I went from idea to live product in 24 hours. The morning Telegram message is now my favorite notification.",
     author: "Elena Rodriguez",
     role: "Founder, TaskFlow",
+  },
+];
+
+// Fleet Advantage statements
+const fleetAdvantage = [
+  {
+    headline: "Your backlog is now a to-do list.",
+    body: "Every idea you've shelved because you couldn't afford to build it — gone. The fleet doesn't care if it's 3 AM. It builds.",
+  },
+  {
+    headline: "You just became a 100x founder.",
+    body: "The 10x engineer competed with humans. You now have something that competes with teams. One founder with a fleet outships a 5-person startup.",
+  },
+  {
+    headline: "The bottleneck was never your idea.",
+    body: "You always had the vision. The bottleneck was translation — turning vision into code. Night Shift eliminated that bottleneck.",
   },
 ];
 
@@ -166,10 +227,10 @@ export default function Home() {
                 How it Works
               </a>
               <a
-                href="#what-you-get"
+                href="#fleet"
                 className="text-sm text-zinc-400 hover:text-white transition-colors"
               >
-                What You Get
+                The Fleet
               </a>
               <a
                 href="#pricing"
@@ -205,9 +266,9 @@ export default function Home() {
           >
             {/* Badge */}
             <motion.div variants={itemVariants} className="mb-8">
-              <div className="inline-flex items-center gap-2 rounded-full glass px-4 py-2">
-                <Shield className="h-4 w-4 text-neon-cyan" />
-                <span className="text-sm text-zinc-300">No code required. No lock-in. No waiting.</span>
+              <div className="inline-flex items-center gap-2 rounded-full glass px-4 py-2 border-neon-cyan/30">
+                <Zap className="h-4 w-4 text-neon-cyan" />
+                <span className="text-sm text-zinc-300 font-medium">The 10x engineer is dead. The 100x founder is here.</span>
               </div>
             </motion.div>
 
@@ -216,18 +277,23 @@ export default function Home() {
               variants={itemVariants}
               className="text-5xl md:text-7xl font-bold tracking-tight text-white mb-6"
             >
-              You have the idea.
-              <br />
-              <span className="gradient-text">We build the software.</span>
+              One founder. One vision.
             </motion.h1>
 
             {/* Subheadline */}
             <motion.p 
               variants={itemVariants}
+              className="mx-auto max-w-3xl text-2xl md:text-4xl font-bold gradient-text mb-8"
+            >
+              An entire engineering team executing while you sleep.
+            </motion.p>
+
+            {/* Body */}
+            <motion.p 
+              variants={itemVariants}
               className="mx-auto max-w-2xl text-lg md:text-xl text-zinc-400 mb-10"
             >
-              Describe what you need tonight. Wake up to a live product tomorrow. 
-              Your code. Your domain. Yours forever.
+              The old model: hire engineers, wait months, burn runway. The new model: describe what you want. A fleet of 10 specialized AI agents builds it overnight. You wake up. It&apos;s live.
             </motion.p>
 
             {/* CTA Buttons */}
@@ -236,14 +302,14 @@ export default function Home() {
               className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6"
             >
               <a href="#waitlist">
-                <Button size="lg" className="gap-2 neon-glow animate-glow-pulse">
+                <Button size="lg" className="gap-2 neon-glow animate-glow-pulse text-base px-8 py-6">
                   <Rocket className="h-5 w-5" />
-                  Describe your first product
+                  Deploy your fleet
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </a>
-              <a href="#how-it-works" className="text-zinc-400 hover:text-white transition-colors flex items-center gap-2">
-                See how it works
+              <a href="#fleet" className="text-zinc-400 hover:text-white transition-colors flex items-center gap-2">
+                Meet the fleet
                 <ArrowRight className="h-4 w-4" />
               </a>
             </motion.div>
@@ -259,12 +325,13 @@ export default function Home() {
               className="grid grid-cols-3 gap-8 max-w-2xl mx-auto"
             >
               {[
-                { value: '8 hrs', label: 'From Idea to Live' },
-                { value: '100%', label: 'You Own Everything' },
-                { value: '24/7', label: 'Fleet Working' },
+                { value: '10+', sub: 'agents', label: 'And growing' },
+                { value: '48 hrs', sub: '', label: 'Idea to live product' },
+                { value: '1/1000th', sub: '', label: 'The cost of a dev team' },
               ].map((stat) => (
                 <div key={stat.label} className="text-center">
                   <div className="text-3xl md:text-4xl font-bold text-white mb-1">{stat.value}</div>
+                  {stat.sub && <div className="text-sm text-neon-cyan font-medium mb-1">{stat.sub}</div>}
                   <div className="text-sm text-zinc-500">{stat.label}</div>
                 </div>
               ))}
@@ -273,7 +340,97 @@ export default function Home() {
         </div>
       </section>
 
-      {/* How It Works - 3 Steps */}
+      {/* How The Fleet Works Section */}
+      <section id="fleet" className="relative py-24 border-t border-white/5">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Not one AI. A coordinated swarm.
+            </h2>
+            <p className="text-zinc-400 max-w-2xl mx-auto text-lg">
+              10 specialized agents. Each an expert. Working in parallel. Reporting to you.
+            </p>
+          </motion.div>
+
+          {/* Agent Grid - Terminal/Command Center Aesthetic */}
+          <div className="relative">
+            {/* Background grid effect */}
+            <div className="absolute inset-0 bg-gradient-to-b from-neon-cyan/5 via-transparent to-transparent rounded-3xl pointer-events-none" />
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+              {agentRoster.map((agent, index) => (
+                <motion.div
+                  key={agent.name}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.05 }}
+                  whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
+                  className={`relative glass rounded-xl p-5 border ${agent.isLead ? 'border-neon-cyan/40' : 'border-white/10'} hover:border-neon-cyan/30 transition-all group`}
+                >
+                  {/* Status dot - pulsing cyan */}
+                  <div className="absolute top-3 right-3">
+                    <div className="relative">
+                      <div className="h-2 w-2 rounded-full bg-neon-cyan" />
+                      <div className="absolute inset-0 rounded-full bg-neon-cyan animate-ping" style={{ animationDuration: '2s' }} />
+                    </div>
+                  </div>
+
+                  {/* Icon */}
+                  <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${agent.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                    <agent.icon className={`h-5 w-5 ${agent.isLead ? 'text-neon-cyan' : 'text-white'}`} />
+                  </div>
+
+                  {/* Content */}
+                  <h3 className="text-sm font-bold text-white mb-2">{agent.name}</h3>
+                  <p className="text-xs text-zinc-400 leading-relaxed">{agent.description}</p>
+
+                  {/* Lead badge */}
+                  {agent.isLead && (
+                    <div className="mt-3 inline-flex items-center gap-1 text-xs text-neon-cyan font-medium">
+                      <span className="w-1.5 h-1.5 rounded-full bg-neon-cyan animate-pulse" />
+                      Lead Agent
+                    </div>
+                  )}
+                </motion.div>
+              ))}
+            </div>
+          </div>
+
+          {/* Fleet Expansion Footer */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.5 }}
+            className="mt-8 text-center"
+          >
+            <p className="text-sm text-zinc-500">
+              Our fleet is continuously expanding. Each new agent makes your products smarter, faster, and more resilient.
+            </p>
+          </motion.div>
+
+          {/* Vision vs Reality Honesty Signal */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.6 }}
+            className="mt-6 text-center"
+          >
+            <p className="text-xs text-zinc-600">
+              Currently in private beta. Core fleet active. Additional specialist agents rolling out through 2026.
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* The Fleet Advantage Section */}
       <section id="how-it-works" className="relative py-24 border-t border-white/5">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div 
@@ -283,90 +440,30 @@ export default function Home() {
             className="text-center mb-16"
           >
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              How It Works
+              What changes when you have a fleet
             </h2>
-            <p className="text-zinc-400 max-w-2xl mx-auto">
-              No technical knowledge needed. Just describe what you want, and we handle the rest.
-            </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              {
-                icon: Sparkles,
-                title: 'Describe your idea',
-                description: 'Plain English. No technical specs. Like texting a friend what you want built.',
-                step: '01',
-              },
-              {
-                icon: Moon,
-                title: 'The fleet builds overnight',
-                description: 'Your AI team plans, designs, and builds while you sleep. Every night.',
-                step: '02',
-              },
-              {
-                icon: Rocket,
-                title: 'Wake up to something live',
-                description: 'Your product is deployed. Real URL. You own the code, the domain, the infrastructure.',
-                step: '03',
-              },
-            ].map((step, index) => (
+          <div className="space-y-8">
+            {fleetAdvantage.map((statement, index) => (
               <motion.div
-                key={step.title}
-                initial={{ opacity: 0, y: 20 }}
+                key={statement.headline}
+                initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
+                transition={{ delay: index * 0.15, duration: 0.6 }}
                 className="relative"
               >
-                <div className="glass glass-hover rounded-2xl p-8 h-full">
-                  <div className="text-6xl font-bold text-white/5 absolute top-4 right-4">{step.step}</div>
-                  <div className="relative">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-neon-purple/20 to-neon-cyan/20 flex items-center justify-center mb-6">
-                      <step.icon className="h-6 w-6 text-neon-cyan" />
-                    </div>
-                    <h3 className="text-xl font-semibold text-white mb-3">{step.title}</h3>
-                    <p className="text-zinc-400">{step.description}</p>
+                <div className="glass rounded-2xl p-8 md:p-12 border border-white/5 hover:border-neon-purple/30 transition-all">
+                  <div className="max-w-4xl">
+                    <h3 className="text-2xl md:text-4xl font-bold text-white mb-4 leading-tight">
+                      {statement.headline}
+                    </h3>
+                    <p className="text-lg md:text-xl text-zinc-400 leading-relaxed">
+                      {statement.body}
+                    </p>
                   </div>
                 </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* What You Get Section */}
-      <section id="what-you-get" className="relative py-24 border-t border-white/5">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              What you get
-            </h2>
-            <p className="text-zinc-400 max-w-2xl mx-auto">
-              Not prototypes. Real products you own completely.
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {whatYouGet.map((item, index) => (
-              <motion.div
-                key={item.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className="glass glass-hover rounded-2xl p-6"
-              >
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-neon-purple/20 to-neon-cyan/20 flex items-center justify-center mb-4">
-                  <item.icon className="h-6 w-6 text-neon-cyan" />
-                </div>
-                <h3 className="text-lg font-semibold text-white mb-2">{item.title}</h3>
-                <p className="text-sm text-zinc-400">{item.description}</p>
               </motion.div>
             ))}
           </div>
@@ -380,82 +477,109 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-12"
+            className="text-center mb-16"
           >
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              While you slept, Bolt made you a prototype.
+              Every other option makes you wait.
               <br />
-              <span className="gradient-text">Night Shift made you a product.</span>
+              <span className="gradient-text">Night Shift ships while you sleep.</span>
             </h2>
+            <p className="text-zinc-400 max-w-xl mx-auto">
+              You&apos;ve tried the alternatives. Here&apos;s the honest truth about each one.
+            </p>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              {
-                icon: Bot,
-                title: 'Bolt / Lovable',
-                cons: ['Builds prototypes', 'Owns your code', 'Real-time = you wait'],
-              },
-              {
-                icon: Building2,
-                title: 'Agencies',
-                cons: ['Slow (weeks/months)', 'Expensive ($10K+)', 'You lose control'],
-              },
-              {
-                icon: Moon,
-                title: 'Night Shift',
-                pros: ['Overnight delivery', 'You own everything', 'Keeps improving'],
-                highlight: true,
-              },
-            ].map((col, i) => (
-              <motion.div
-                key={col.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className={`rounded-2xl p-6 ${
-                  col.highlight 
-                    ? 'glass neon-border' 
-                    : 'glass'
-                }`}
-              >
-                <div className="flex items-center gap-3 mb-6">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                    col.highlight 
-                      ? 'bg-gradient-to-br from-neon-cyan/20 to-neon-purple/20' 
-                      : 'bg-slate-800'
-                  }`}>
-                    <col.icon className={`h-5 w-5 ${col.highlight ? 'text-neon-cyan' : 'text-zinc-400'}`} />
-                  </div>
-                  <h3 className={`text-lg font-semibold ${col.highlight ? 'text-white' : 'text-zinc-300'}`}>
-                    {col.title}
-                  </h3>
+            {/* Bolt/Lovable */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0 }}
+              className="glass rounded-2xl p-8 flex flex-col gap-5"
+            >
+              <div>
+                <div className="text-xs font-semibold tracking-widest text-zinc-500 uppercase mb-2">Bolt / Lovable / Replit</div>
+                <h3 className="text-xl font-bold text-white">You sit and watch it build.</h3>
+              </div>
+              <div className="space-y-4 text-sm text-zinc-400">
+                <div className="flex gap-3">
+                  <span className="text-red-400 mt-0.5">✕</span>
+                  <span><span className="text-white font-medium">They own your code.</span> Try to export it and you&apos;ll find it&apos;s locked to their platform. Switching costs are brutal.</span>
                 </div>
-                
-                {'cons' in col && col.cons && (
-                  <ul className="space-y-3">
-                    {col.cons.map((item) => (
-                      <li key={item} className="flex items-center gap-2 text-sm text-zinc-500">
-                        <span className="w-1.5 h-1.5 rounded-full bg-zinc-600" />
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                
-                {'pros' in col && col.pros && (
-                  <ul className="space-y-3">
-                    {col.pros.map((item) => (
-                      <li key={item} className="flex items-center gap-2 text-sm text-emerald-400">
-                        <Check className="h-4 w-4" />
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </motion.div>
-            ))}
+                <div className="flex gap-3">
+                  <span className="text-red-400 mt-0.5">✕</span>
+                  <span><span className="text-white font-medium">You have to be there.</span> Real-time tools require your full attention. That&apos;s not leverage — that&apos;s a new job.</span>
+                </div>
+                <div className="flex gap-3">
+                  <span className="text-red-400 mt-0.5">✕</span>
+                  <span><span className="text-white font-medium">Prototypes, not products.</span> Great for demos. Breaks at scale. You&apos;ll rebuild it anyway.</span>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Agencies */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="glass rounded-2xl p-8 flex flex-col gap-5"
+            >
+              <div>
+                <div className="text-xs font-semibold tracking-widest text-zinc-500 uppercase mb-2">Dev Agencies / Freelancers</div>
+                <h3 className="text-xl font-bold text-white">You wait weeks. Then you wait more.</h3>
+              </div>
+              <div className="space-y-4 text-sm text-zinc-400">
+                <div className="flex gap-3">
+                  <span className="text-red-400 mt-0.5">✕</span>
+                  <span><span className="text-white font-medium">$10K–$50K to start.</span> And that&apos;s before scope creep, missed deadlines, and &quot;that&apos;ll cost extra.&quot;</span>
+                </div>
+                <div className="flex gap-3">
+                  <span className="text-red-400 mt-0.5">✕</span>
+                  <span><span className="text-white font-medium">3–6 months to launch.</span> Your window closes. Your competitors ship. You&apos;re still in sprint planning.</span>
+                </div>
+                <div className="flex gap-3">
+                  <span className="text-red-400 mt-0.5">✕</span>
+                  <span><span className="text-white font-medium">They leave. You&apos;re stuck.</span> No documentation, no handoff, no one who knows the codebase.</span>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Night Shift — highlighted */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="relative neon-border rounded-2xl p-8 flex flex-col gap-5"
+              style={{ background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(10, 10, 15, 0.95) 60%)' }}
+            >
+              <div className="absolute top-4 right-4">
+                <span className="text-xs font-semibold tracking-widest text-purple-400 uppercase bg-purple-500/10 px-3 py-1 rounded-full border border-purple-500/20">Night Shift</span>
+              </div>
+              <div>
+                <div className="text-xs font-semibold tracking-widest text-purple-400 uppercase mb-2">The Alternative</div>
+                <h3 className="text-xl font-bold text-white">Go to sleep. Wake up to a live product.</h3>
+              </div>
+              <div className="space-y-4 text-sm">
+                <div className="flex gap-3">
+                  <span className="text-emerald-400 mt-0.5">✓</span>
+                  <span className="text-zinc-300"><span className="text-white font-medium">You own everything.</span> Your code, your domain, your infrastructure. Night Shift is the builder — not the landlord.</span>
+                </div>
+                <div className="flex gap-3">
+                  <span className="text-emerald-400 mt-0.5">✓</span>
+                  <span className="text-zinc-300"><span className="text-white font-medium">Overnight, every night.</span> Describe what you need before bed. Wake up to a real, deployed product. Not a demo.</span>
+                </div>
+                <div className="flex gap-3">
+                  <span className="text-emerald-400 mt-0.5">✓</span>
+                  <span className="text-zinc-300"><span className="text-white font-medium">Gets better over time.</span> Every product teaches the fleet more about what you want. The second build is faster than the first.</span>
+                </div>
+              </div>
+              <a href="#waitlist" className="mt-2 inline-flex items-center gap-2 text-sm font-medium text-purple-400 hover:text-purple-300 transition-colors">
+                Start tonight <ArrowRight className="h-4 w-4" />
+              </a>
+            </motion.div>
           </div>
         </div>
       </section>
@@ -512,7 +636,7 @@ export default function Home() {
             className="text-center mb-16"
           >
             <p className="text-sm text-zinc-500 mb-4">
-              Starting at <span className="text-zinc-300 font-medium">$49/mo</span> · No credit card required · Cancel anytime
+              Starting at <span className="text-zinc-300 font-medium">$99/mo</span> · No credit card required · Cancel anytime
             </p>
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
               Simple, transparent pricing
@@ -597,7 +721,7 @@ export default function Home() {
               </div>
               
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                Join the waitlist. Your first product ships tonight.
+                Join the waitlist. The fleet starts working the moment you submit your first request.
               </h2>
               <p className="text-zinc-400 max-w-xl mx-auto">
                 Limited spots available for our private beta. Join the waitlist and be the first to ship while you sleep.
@@ -619,7 +743,7 @@ export default function Home() {
                 <span className="text-white font-bold">Night Shift</span>
               </div>
               <p className="text-sm text-zinc-500">
-                Ship while you sleep. AI engineers that work 24/7.
+                One founder. One vision. A fleet that never sleeps.
               </p>
             </div>
 
@@ -634,8 +758,8 @@ export default function Home() {
                     </a>
                   </li>
                   <li>
-                    <a href="#what-you-get" className="text-sm text-zinc-400 hover:text-white transition-colors">
-                      What You Get
+                    <a href="#fleet" className="text-sm text-zinc-400 hover:text-white transition-colors">
+                      The Fleet
                     </a>
                   </li>
                   <li>
