@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
         *,
         features(title)
       `)
-      .eq('org_id', user.org_id)
+      .eq('org_id', (user as any).org_id)
       .order('created_at', { ascending: false });
 
     if (featureId) {
@@ -72,7 +72,7 @@ export async function PATCH(request: NextRequest) {
       .from('builds')
       .select('*')
       .eq('id', build_id)
-      .eq('org_id', user.org_id)
+      .eq('org_id', (user as any).org_id)
       .single();
 
     if (fetchError || !existingBuild) {

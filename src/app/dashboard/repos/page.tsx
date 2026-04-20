@@ -15,8 +15,12 @@ export default function ReposPage() {
   );
 }
 
+function handleConnectRepo() {
+  alert('GitHub OAuth integration coming soon! For beta users, send Alex your GitHub repo URL and he will connect it manually.');
+}
+
 function ReposContent() {
-  const { data: repos, error, isLoading, mutate } = useSWR('repos', fetchRepos);
+  const { data: repos, error, isLoading, mutate } = useSWR('repos', () => fetchRepos());
 
   if (error) {
     return (
@@ -112,10 +116,7 @@ function ReposContent() {
   );
 }
 
-function handleConnectRepo() {
-  // TODO: Implement GitHub OAuth flow
-  alert('GitHub OAuth integration coming soon! For now, repos are added via the database.');
-}
+
 
 function ReposSkeleton() {
   return (

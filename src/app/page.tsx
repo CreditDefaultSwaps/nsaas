@@ -205,6 +205,12 @@ export default function Home() {
                 The Fleet
               </a>
               <a
+                href="/demo"
+                className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors"
+              >
+                Demo
+              </a>
+              <a
                 href="#pricing"
                 className="text-sm text-zinc-400 hover:text-white transition-colors"
               >

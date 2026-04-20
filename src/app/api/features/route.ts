@@ -123,10 +123,10 @@ export async function POST(request: NextRequest) {
         id: featureId,
         org_id: (user as any).org_id,
         repo_id: repo_id || null,
-        created_by: (user as any).id,
+        requested_by: (user as any).id,
         title: title.trim(),
         description: description.trim(),
-        priority: normalizedPriority as 'low' | 'medium' | 'high' | 'urgent',
+        priority: normalizedPriority,
         status: 'pending',
       })
       .select()
@@ -145,6 +145,7 @@ export async function POST(request: NextRequest) {
         id: buildId,
         feature_id: feature.id,
         org_id: (user as any).org_id,
+        agent_name: 'night-shift-dev',
         status: 'queued',
       });
 

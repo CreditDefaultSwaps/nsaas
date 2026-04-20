@@ -59,13 +59,13 @@ export default function DashboardPage() {
 
   const { data: features, error: featuresError, isLoading: featuresLoading, mutate: mutateFeatures } = useSWR(
     'features',
-    fetchFeatures,
+    () => fetchFeatures(),
     { refreshInterval: 5000 }
   );
 
   const { data: builds, error: buildsError, isLoading: buildsLoading, mutate: mutateBuilds } = useSWR(
     'builds',
-    fetchBuilds,
+    () => fetchBuilds(),
     { refreshInterval: 5000 }
   );
 
@@ -345,10 +345,33 @@ function OverviewTab({
 
 // New Request Tab Component
 function NewRequestTab({ onSuccess }: { onSuccess: () => void }) {
-  const [productName, setProductName] = useState('');
-  const [description, setDescription] = useState('');
-  const [referenceUrls, setReferenceUrls] = useState('');
-  const [priority, setPriority] = useState<'tonight' | 'this-week'>('tonight');
+  // Persist draft to localStorage so it survives navigation
+  const [productName, setProductName] = useState(() => {
+    if (typeof window !== 'undefined') return localStorage.getItem('ns_draft_name') || '';
+    return '';
+  });
+  const [description, setDescription] = useState(() => {
+    if (typeof window !== 'undefined') return localStorage.getItem('ns_draft_desc') || '';
+    return '';
+  });
+  const [referenceUrls, setReferenceUrls] = useState(() => {
+    if (typeof window !== 'undefined') return localStorage.getItem('ns_draft_urls') || '';
+    return '';
+  });
+  const [priority, setPriority] = useState<'tonight' | 'this-week'>(() => {
+    if (typeof window !== 'undefined') return (localStorage.getItem('ns_draft_priority') as 'tonight' | 'this-week') || 'tonight';
+    return 'tonight';
+  });
+
+  // Auto-save draft
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('ns_draft_name', productName);
+      localStorage.setItem('ns_draft_desc', description);
+      localStorage.setItem('ns_draft_urls', referenceUrls);
+      localStorage.setItem('ns_draft_priority', priority);
+    }
+  }, [productName, description, referenceUrls, priority]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [submittedFeatureId, setSubmittedFeatureId] = useState<string | null>(null);
@@ -374,6 +397,11 @@ function NewRequestTab({ onSuccess }: { onSuccess: () => void }) {
       const data = await response.json();
       setSubmittedFeatureId(data.feature.id);
       setIsSuccess(true);
+      // Clear draft on success
+      localStorage.removeItem('ns_draft_name');
+      localStorage.removeItem('ns_draft_desc');
+      localStorage.removeItem('ns_draft_urls');
+      localStorage.removeItem('ns_draft_priority');
     } catch (error) {
       console.error('Error submitting request:', error);
     } finally {

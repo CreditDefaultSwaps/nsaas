@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    if (build.org_id !== user.org_id) {
+    if (build.org_id !== (user as any).org_id) {
       return new Response(
         JSON.stringify({ error: 'Access denied' }),
         { status: 403, headers: { 'Content-Type': 'application/json' } }

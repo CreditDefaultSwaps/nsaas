@@ -18,7 +18,7 @@ export default function ActiveShiftsPage() {
 }
 
 function ActiveShiftsContent() {
-  const { data: builds, error, isLoading, mutate } = useSWR('builds', fetchBuilds, {
+  const { data: builds, error, isLoading, mutate } = useSWR('builds', () => fetchBuilds(), {
     refreshInterval: 5000,
   });
 

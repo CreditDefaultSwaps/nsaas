@@ -28,7 +28,7 @@ export default function NewRequestPage() {
 
 function NewRequestContent() {
   const router = useRouter();
-  const { data: repos, isLoading: reposLoading } = useSWR('repos', fetchRepos);
+  const { data: repos, isLoading: reposLoading } = useSWR('repos', () => fetchRepos());
   
   const [formData, setFormData] = useState({
     repo_id: '',
