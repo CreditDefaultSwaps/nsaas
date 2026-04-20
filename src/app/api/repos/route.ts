@@ -10,7 +10,7 @@ export async function GET() {
     const { data: repos, error } = await supabaseAdmin
       .from('repos')
       .select('*')
-      .eq('org_id', user.org_id)
+      .eq('org_id', (user as any).org_id)
       .order('created_at', { ascending: false });
 
     if (error) {

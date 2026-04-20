@@ -1,11 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Logo } from '@/components/logo';
 import { CommandPalette } from '@/components/ui/command-palette';
 import { useState } from 'react';
+import { supabaseClient } from '@/lib/supabase-client';
 import { 
   LayoutDashboard, 
   GitBranch, 
@@ -13,7 +14,8 @@ import {
   Settings,
   Plus,
   Search,
-  Bell
+  Bell,
+  LogOut
 } from '@/components/icons';
 
 // Check if Clerk is configured
@@ -99,7 +101,7 @@ export default function DashboardLayout({
                 <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-neon-cyan animate-pulse" />
               </button>
 
-              {isClerkConfigured ? <UserButtonWrapper /> : <DemoUserBadge />}
+              <DemoUserBadge />
             </div>
           </div>
         </div>
@@ -143,16 +145,21 @@ export default function DashboardLayout({
   );
 }
 
-function UserButtonWrapper() {
-  const { UserButton } = require('@clerk/nextjs');
-  return <UserButton afterSignOutUrl="/" />;
-}
-
 function DemoUserBadge() {
+  const router = useRouter();
+  
+  const handleLogout = async () => {
+    await supabaseClient.auth.signOut();
+    router.push('/login');
+  };
+
   return (
-    <div className="flex items-center gap-2 rounded-lg bg-white/5 px-3 py-1.5 border border-white/10">
-      <div className="h-6 w-6 rounded-full bg-gradient-to-br from-neon-purple to-neon-cyan" />
-      <span className="text-sm text-zinc-400 hidden sm:block">Demo</span>
-    </div>
+    <button 
+      onClick={handleLogout}
+      className="flex items-center gap-2 rounded-lg bg-white/5 px-3 py-1.5 border border-white/10 hover:bg-white/10 transition-colors"
+    >
+      <LogOut className="h-4 w-4 text-zinc-400" />
+      <span className="text-sm text-zinc-400 hidden sm:block">Log out</span>
+    </button>
   );
 }

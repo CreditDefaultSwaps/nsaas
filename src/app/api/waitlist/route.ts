@@ -37,6 +37,37 @@ export async function POST(request: NextRequest) {
       throw error;
     }
 
+    // Alert Alex via Telegram
+    try {
+      const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN;
+      const telegramChatId = process.env.TELEGRAM_CHAT_ID;
+      if (telegramBotToken && telegramChatId) {
+        const alertMessage = [
+          '🚀 *New NightShift Waitlist Signup*',
+          '',
+          `👤 *Name:* ${validated.firstName} ${validated.lastName}`,
+          validated.companyName ? `🏢 *Company:* ${validated.companyName}` : '',
+          `📧 *Email:* ${validated.email.toLowerCase()}`,
+          '',
+          '*Suggested outreach:*',
+          `Hey ${validated.firstName}, saw you joined the NightShift waitlist — I'm Alex, the founder. Quick question: what's the first thing you'd want to build? I'm onboarding the first few users personally and want to make sure your first shift ships something meaningful.`,
+        ].filter(Boolean).join('\n');
+
+        await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: telegramChatId,
+            text: alertMessage,
+            parse_mode: 'Markdown',
+          }),
+        });
+      }
+    } catch (alertErr) {
+      // Don't fail the request if alert fails
+      console.error('Telegram alert failed:', alertErr);
+    }
+
     return NextResponse.json({ 
       success: true, 
       message: 'You\'re on the list. We\'ll be in touch soon.',

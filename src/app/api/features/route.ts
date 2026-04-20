@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
           repos(name, full_name)
         `)
         .eq('id', featureId)
-        .eq('org_id', user.org_id);
+        .eq('org_id', (user as any).org_id);
 
       if (error) {
         console.error('Error fetching feature:', error);
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
         *,
         repos(name, full_name)
       `)
-      .eq('org_id', user.org_id)
+      .eq('org_id', (user as any).org_id)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -70,51 +70,46 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { repo_id, title, description, priority = 'medium' } = body;
+    const { repo_id, title, description, priority = 'p1', techPreferences, referenceUrls } = body;
 
-    // Validation
-    if (!repo_id || typeof repo_id !== 'string') {
+    // Validation — repo_id is optional for now
+    if (!title || typeof title !== 'string' || title.trim().length < 1) {
       return NextResponse.json(
-        { error: 'Missing or invalid required field: repo_id' },
+        { error: 'Title is required' },
         { status: 400 }
       );
     }
 
-    if (!title || typeof title !== 'string' || title.trim().length < 3) {
+    if (!description || typeof description !== 'string' || description.trim().length < 5) {
       return NextResponse.json(
-        { error: 'Missing or invalid required field: title (min 3 characters)' },
+        { error: 'Description must be at least 5 characters' },
         { status: 400 }
       );
     }
 
-    if (!description || typeof description !== 'string' || description.trim().length < 10) {
-      return NextResponse.json(
-        { error: 'Missing or invalid required field: description (min 10 characters)' },
-        { status: 400 }
-      );
-    }
+    // Normalize priority to schema format (p0/p1/p2)
+    const priorityMap: Record<string, string> = {
+      'urgent': 'p0', 'high': 'p0',
+      'medium': 'p1', 'tonight': 'p1', 'p1': 'p1',
+      'low': 'p2', 'this week': 'p2', 'p2': 'p2',
+    };
+    const normalizedPriority = priorityMap[priority?.toLowerCase()] || 'p1';
 
-    const validPriorities = ['low', 'medium', 'high', 'urgent'];
-    if (!validPriorities.includes(priority)) {
-      return NextResponse.json(
-        { error: `Invalid priority. Must be one of: ${validPriorities.join(', ')}` },
-        { status: 400 }
-      );
-    }
+    // Verify repo belongs to user's org (optional — skip if no repo_id)
+    if (repo_id) {
+      const { data: repo, error: repoError } = await supabaseAdmin
+        .from('repos')
+        .select('*')
+        .eq('id', repo_id)
+        .eq('org_id', (user as any).org_id)
+        .single();
 
-    // Verify repo belongs to user's org
-    const { data: repo, error: repoError } = await supabaseAdmin
-      .from('repos')
-      .select('*')
-      .eq('id', repo_id)
-      .eq('org_id', user.org_id)
-      .single();
-
-    if (repoError || !repo) {
-      return NextResponse.json(
-        { error: 'Repository not found or access denied' },
-        { status: 404 }
-      );
+      if (repoError || !repo) {
+        return NextResponse.json(
+          { error: 'Repository not found or access denied' },
+          { status: 404 }
+        );
+      }
     }
 
     // Generate branch name
@@ -126,13 +121,12 @@ export async function POST(request: NextRequest) {
       .from('features')
       .insert({
         id: featureId,
-        org_id: user.org_id,
-        repo_id,
+        org_id: (user as any).org_id,
+        repo_id: repo_id || null,
+        requested_by: (user as any).id,
         title: title.trim(),
         description: description.trim(),
-        priority,
-        created_by: user.id,
-        branch_name: branchName,
+        priority: normalizedPriority,
         status: 'pending',
       })
       .select()
@@ -150,7 +144,7 @@ export async function POST(request: NextRequest) {
       .insert({
         id: buildId,
         feature_id: feature.id,
-        org_id: user.org_id,
+        org_id: (user as any).org_id,
         status: 'queued',
       });
 

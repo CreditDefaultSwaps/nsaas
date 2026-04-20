@@ -16,65 +16,38 @@ export const metadata: Metadata = {
   },
 };
 
-// Check if Clerk is configured
-const isClerkConfigured = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && 
-  !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.includes('pk_test_dmFsaWQ');
-
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const content = (
-    <>
-      <StarsBackground />
-      <div className="relative z-10">
-        {children}
-      </div>
-      <Toaster
-        position="bottom-right"
-        toastOptions={{
-          className: 'glass text-zinc-100 border-neon-purple/20',
-          success: {
-            iconTheme: {
-              primary: '#22d3ee',
-              secondary: '#0a0a0f',
-            },
-          },
-          error: {
-            iconTheme: {
-              primary: '#ef4444',
-              secondary: '#0a0a0f',
-            },
-          },
-        }}
-      />
-    </>
-  );
-
-  // Wrap with ClerkProvider only if configured
-  if (isClerkConfigured) {
-    const { ClerkProvider } = require('@clerk/nextjs');
-    return (
-      <ClerkProvider>
-        <html lang="en" className="dark">
-          <body
-            className={`${GeistSans.variable} ${GeistMono.variable} font-sans antialiased bg-night-900`}
-          >
-            {content}
-          </body>
-        </html>
-      </ClerkProvider>
-    );
-  }
-
-  // No Clerk - render without provider
   return (
     <html lang="en" className="dark">
       <body
         className={`${GeistSans.variable} ${GeistMono.variable} font-sans antialiased bg-night-900`}
       >
-        {content}
+        <StarsBackground />
+        <div className="relative z-10">
+          {children}
+        </div>
+        <Toaster
+          position="bottom-right"
+          toastOptions={{
+            className: 'glass text-zinc-100 border-neon-purple/20',
+            success: {
+              iconTheme: {
+                primary: '#22d3ee',
+                secondary: '#0a0a0f',
+              },
+            },
+            error: {
+              iconTheme: {
+                primary: '#ef4444',
+                secondary: '#0a0a0f',
+              },
+            },
+          }}
+        />
       </body>
     </html>
   );
