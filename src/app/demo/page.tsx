@@ -22,19 +22,92 @@ import {
   Server,
   Code2,
   FileCode,
-  GitPullRequest
+  GitPullRequest,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 import { LogoWordmark } from '@/components/logo';
 
-const TOTAL_DURATION = 90;
+const TOTAL_DURATION = 60;
 const SCENES = [
   { id: 0, name: 'Hero', duration: 8, startAt: 0 },
   { id: 1, name: 'Problem', duration: 10, startAt: 8 },
-  { id: 2, name: 'Fleet', duration: 22, startAt: 18 },
-  { id: 3, name: 'Morning', duration: 15, startAt: 40 },
-  { id: 4, name: 'Product', duration: 20, startAt: 55 },
-  { id: 5, name: 'CTA', duration: 15, startAt: 75 },
+  { id: 2, name: 'Fleet', duration: 15, startAt: 18 },
+  { id: 3, name: 'Morning', duration: 12, startAt: 33 },
+  { id: 4, name: 'CTA', duration: 15, startAt: 45 },
 ];
+
+function createZHUAmbience(audioCtx: AudioContext): () => void {
+  const nodes: AudioNode[] = [];
+  
+  // Sub-bass pulse (40-60 Hz) - ZHU's signature deep bass
+  const subBass = audioCtx.createOscillator();
+  const subBassGain = audioCtx.createGain();
+  subBass.type = 'sine';
+  subBass.frequency.setValueAtTime(45, audioCtx.currentTime);
+  subBassGain.gain.setValueAtTime(0, audioCtx.currentTime);
+  subBassGain.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + 2);
+  // Slow pulse every 2 bars
+  const lfoSub = audioCtx.createOscillator();
+  const lfoSubGain = audioCtx.createGain();
+  lfoSub.frequency.value = 0.5; // 0.5 Hz = 1 pulse per 2 seconds
+  lfoSubGain.gain.value = 0.08;
+  lfoSub.connect(lfoSubGain);
+  lfoSubGain.connect(subBassGain.gain);
+  subBass.connect(subBassGain);
+  subBassGain.connect(audioCtx.destination);
+  
+  // Atmospheric pad (mid-range, slightly detuned for width)
+  const pad1 = audioCtx.createOscillator();
+  const pad2 = audioCtx.createOscillator();
+  const padGain = audioCtx.createGain();
+  const padFilter = audioCtx.createBiquadFilter();
+  pad1.type = 'sawtooth';
+  pad2.type = 'sawtooth';
+  pad1.frequency.value = 220; // A3
+  pad2.frequency.value = 221.5; // slightly detuned for chorus effect
+  padFilter.type = 'lowpass';
+  padFilter.frequency.value = 800;
+  padFilter.Q.value = 2;
+  padGain.gain.setValueAtTime(0, audioCtx.currentTime);
+  padGain.gain.linearRampToValueAtTime(0.04, audioCtx.currentTime + 3);
+  pad1.connect(padFilter);
+  pad2.connect(padFilter);
+  padFilter.connect(padGain);
+  padGain.connect(audioCtx.destination);
+  
+  // High atmospheric shimmer (ZHU-style synth top)
+  const shimmer = audioCtx.createOscillator();
+  const shimmerGain = audioCtx.createGain();
+  const shimmerFilter = audioCtx.createBiquadFilter();
+  shimmer.type = 'triangle';
+  shimmer.frequency.value = 880; // A5
+  shimmerFilter.type = 'highpass';
+  shimmerFilter.frequency.value = 600;
+  shimmerGain.gain.setValueAtTime(0, audioCtx.currentTime);
+  shimmerGain.gain.linearRampToValueAtTime(0.02, audioCtx.currentTime + 4);
+  // Very slow shimmer fade
+  const lfoShimmer = audioCtx.createOscillator();
+  const lfoShimmerGain = audioCtx.createGain();
+  lfoShimmer.frequency.value = 0.2; // very slow
+  lfoShimmerGain.gain.value = 0.015;
+  lfoShimmer.connect(lfoShimmerGain);
+  lfoShimmerGain.connect(shimmerGain.gain);
+  shimmer.connect(shimmerFilter);
+  shimmerFilter.connect(shimmerGain);
+  shimmerGain.connect(audioCtx.destination);
+  
+  // Start all oscillators
+  [subBass, lfoSub, pad1, pad2, shimmer, lfoShimmer].forEach(osc => osc.start());
+  nodes.push(subBass, lfoSub, pad1, pad2, shimmer, lfoShimmer);
+  
+  // Return cleanup function
+  return () => {
+    nodes.forEach(node => {
+      try { (node as OscillatorNode).stop(); } catch {}
+    });
+  };
+}
 
 function useTypewriter(text: string, speed: number = 50, isActive: boolean) {
   const [displayText, setDisplayText] = useState('');
@@ -260,8 +333,7 @@ function FleetScene({ isActive }: { isActive: boolean }) {
     { time: '10:48 PM', agent: 'Cyprus', message: 'activating fleet...' },
     { time: '10:51 PM', agent: 'Architect', message: 'spec generated' },
     { time: '10:52 PM', agent: 'Frontend + Backend', message: 'building in parallel' },
-    { time: '11:03 PM', agent: 'QA', message: 'all tests passing' },
-    { time: '11:04 PM', agent: 'DevOps', message: 'deployed' },
+    { time: '11:03 PM', agent: 'DevOps', message: 'deployed' },
   ];
 
   useEffect(() => {
@@ -333,18 +405,24 @@ function FleetScene({ isActive }: { isActive: boolean }) {
           const Icon = agent.icon;
 
           return (
-            <motion.div
+            <div
               key={agent.id}
+              className="absolute"
+              style={{ 
+                left: `calc(50% + ${x}px - 24px)`,
+                top: `calc(50% + ${y}px - 24px)`,
+                width: 48,
+                height: 48,
+              }}
+            >
+            <motion.div
               initial={{ opacity: 0, scale: 0 }}
               animate={{ 
                 opacity: agentActive ? 1 : 0.3, 
                 scale: agentActive ? 1 : 0.8,
               }}
               transition={{ duration: 0.5 }}
-              className="absolute top-1/2 left-1/2"
-              style={{ 
-                transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`,
-              }}
+              className="w-full h-full"
             >
               <div 
                 className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-500 ${
@@ -371,6 +449,7 @@ function FleetScene({ isActive }: { isActive: boolean }) {
                 />
               )}
             </motion.div>
+            </div>
           );
         })}
       </div>
@@ -531,174 +610,6 @@ function MorningScene({ isActive }: { isActive: boolean }) {
   );
 }
 
-function ProductScene({ isActive }: { isActive: boolean }) {
-  const [activeTab, setActiveTab] = useState(0);
-  const tabs = ['Overview', 'Brief the Fleet', 'Morning Brief'];
-
-  useEffect(() => {
-    if (!isActive) {
-      setActiveTab(0);
-      return;
-    }
-
-    const interval = setInterval(() => {
-      setActiveTab(prev => (prev + 1) % tabs.length);
-    }, 2500);
-
-    return () => clearInterval(interval);
-  }, [isActive]);
-
-  return (
-    <div className="flex flex-col items-center justify-center h-full px-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={isActive ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-        className="text-center mb-8"
-      >
-        <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">Your NightShift Dashboard</h2>
-        <p className="text-slate-400">Track builds, brief the fleet, get morning handoffs</p>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={isActive ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.95 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-4xl glass rounded-2xl overflow-hidden border border-slate-700"
-      >
-        <div className="bg-slate-900/80 border-b border-slate-800 px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-cyan-600 flex items-center justify-center">
-              <span className="text-white font-bold text-sm">N</span>
-            </div>
-            <span className="font-semibold text-white">NightShift</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 text-xs text-emerald-400">
-              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              Fleet Active
-            </div>
-          </div>
-        </div>
-
-        <div className="flex border-b border-slate-800">
-          {tabs.map((tab, i) => (
-            <button
-              key={tab}
-              className={`px-6 py-3 text-sm font-medium transition-colors relative ${
-                activeTab === i ? 'text-cyan-400' : 'text-slate-500 hover:text-slate-300'
-              }`}
-            >
-              {tab}
-              {activeTab === i && (
-                <motion.div
-                  layoutId="activeTab"
-                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400"
-                />
-              )}
-            </button>
-          ))}
-        </div>
-
-        <div className="p-6 min-h-[300px]">
-          <AnimatePresence mode="wait">
-            {activeTab === 0 && (
-              <motion.div
-                key="overview"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="space-y-4"
-              >
-                <div className="grid grid-cols-3 gap-4">
-                  {[
-                    { label: 'Products Built', value: '12', color: 'text-cyan-400' },
-                    { label: 'Success Rate', value: '98%', color: 'text-emerald-400' },
-                    { label: 'Hours Saved', value: '340+', color: 'text-purple-400' },
-                  ].map((stat) => (
-                    <div key={stat.label} className="bg-slate-900/50 rounded-xl p-4">
-                      <div className={`text-2xl font-bold ${stat.color}`}>{stat.value}</div>
-                      <div className="text-xs text-slate-500">{stat.label}</div>
-                    </div>
-                  ))}
-                </div>
-                <div className="bg-slate-900/50 rounded-xl p-4">
-                  <div className="text-sm text-slate-400 mb-3">Recent Builds</div>
-                  {[
-                    { name: 'Stripe Revenue Dashboard', status: 'Live', time: '2h ago' },
-                    { name: 'Auth System v2', status: 'Building', time: 'Now' },
-                    { name: 'API Documentation', status: 'Complete', time: '1d ago' },
-                  ].map((build) => (
-                    <div key={build.name} className="flex items-center justify-between py-2 border-b border-slate-800 last:border-0">
-                      <span className="text-sm text-white">{build.name}</span>
-                      <div className="flex items-center gap-3">
-                        <span className={`text-xs ${build.status === 'Building' ? 'text-amber-400' : 'text-emerald-400'}`}>
-                          {build.status}
-                        </span>
-                        <span className="text-xs text-slate-600">{build.time}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-
-            {activeTab === 1 && (
-              <motion.div
-                key="brief"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="space-y-4"
-              >
-                <div className="bg-slate-900/50 rounded-xl p-4">
-                  <label className="text-xs text-slate-500 uppercase mb-2 block">What do you want built?</label>
-                  <div className="bg-slate-800 rounded-lg p-4 text-slate-300 text-sm min-h-[100px]">
-                    I need a customer portal where users can view their subscription status, download invoices, and update payment methods...
-                  </div>
-                </div>
-                <button className="w-full py-3 bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-semibold rounded-lg flex items-center justify-center gap-2">
-                  <Rocket className="h-4 w-4" />
-                  Brief the Fleet
-                </button>
-              </motion.div>
-            )}
-
-            {activeTab === 2 && (
-              <motion.div
-                key="morning"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="space-y-4"
-              >
-                <div className="bg-slate-900/50 rounded-xl p-4 border border-cyan-500/20">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-cyan-600 flex items-center justify-center">
-                      <span className="text-lg">🛰️</span>
-                    </div>
-                    <div>
-                      <div className="font-semibold text-white">Cyprus</div>
-                      <div className="text-xs text-slate-500">6:03 AM · Lead Agent</div>
-                    </div>
-                  </div>
-                  <div className="text-slate-300 text-sm leading-relaxed space-y-2">
-                    <p>Good morning! Your Stripe Revenue Dashboard is now live.</p>
-                    <p>✓ Dashboard with 4 charts</p>
-                    <p>✓ CSV export functionality</p>
-                    <p>✓ Connected to your Stripe account</p>
-                    <p>✓ Deployed to dashboard-stripe.vercel.app</p>
-                    <p className="text-cyan-400 mt-4">Ready for your next brief?</p>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </motion.div>
-    </div>
-  );
-}
-
 function CTAScene({ isActive }: { isActive: boolean }) {
   return (
     <div className="flex flex-col items-center justify-center h-full text-center px-4">
@@ -750,7 +661,10 @@ export default function DemoPage() {
   const [currentScene, setCurrentScene] = useState(0);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingProgress, setRecordingProgress] = useState(0);
+  const [isMuted, setIsMuted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const cleanupAudioRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     if (!isPlaying || isRecording) return;
@@ -787,6 +701,31 @@ export default function DemoPage() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  // Audio management
+  useEffect(() => {
+    if (isPlaying && !audioCtxRef.current && !isMuted) {
+      // Must be triggered by user interaction (already satisfied by play button click)
+      audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      cleanupAudioRef.current = createZHUAmbience(audioCtxRef.current);
+    }
+    
+    if (!isPlaying && audioCtxRef.current) {
+      audioCtxRef.current.suspend();
+    }
+    
+    if (isPlaying && audioCtxRef.current?.state === 'suspended' && !isMuted) {
+      audioCtxRef.current.resume();
+    }
+
+    if (isMuted && audioCtxRef.current) {
+      audioCtxRef.current.suspend();
+    }
+    
+    return () => {
+      if (cleanupAudioRef.current) cleanupAudioRef.current();
+    };
+  }, [isPlaying, isMuted]);
 
   const handleSceneClick = (index: number) => {
     setCurrentTime(SCENES[index].startAt);
@@ -903,18 +842,6 @@ export default function DemoPage() {
             )}
             {currentScene === 4 && (
               <motion.div
-                key="product"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.5 }}
-                className="absolute inset-0"
-              >
-                <ProductScene isActive={currentScene === 4} />
-              </motion.div>
-            )}
-            {currentScene === 5 && (
-              <motion.div
                 key="cta"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -922,7 +849,7 @@ export default function DemoPage() {
                 transition={{ duration: 0.5 }}
                 className="absolute inset-0"
               >
-                <CTAScene isActive={currentScene === 5} />
+                <CTAScene isActive={currentScene === 4} />
               </motion.div>
             )}
           </AnimatePresence>
@@ -938,6 +865,18 @@ export default function DemoPage() {
                 <Pause className="h-5 w-5 text-cyan-400" />
               ) : (
                 <Play className="h-5 w-5 text-cyan-400 ml-0.5" />
+              )}
+            </button>
+
+            <button
+              onClick={() => setIsMuted(!isMuted)}
+              className="w-10 h-10 rounded-full hover:bg-white/5 flex items-center justify-center transition-colors"
+              title={isMuted ? 'Unmute' : 'Mute'}
+            >
+              {isMuted ? (
+                <VolumeX className="h-5 w-5 text-slate-500" />
+              ) : (
+                <Volume2 className="h-5 w-5 text-cyan-400" />
               )}
             </button>
 
