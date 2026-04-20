@@ -37,75 +37,233 @@ const SCENES = [
   { id: 4, name: 'CTA', duration: 15, startAt: 45 },
 ];
 
-function createZHUAmbience(audioCtx: AudioContext): () => void {
+function createDemoAudio(audioCtx: AudioContext): () => void {
+  const now = audioCtx.currentTime;
   const nodes: AudioNode[] = [];
-  
-  // Sub-bass pulse (40-60 Hz) - ZHU's signature deep bass
-  const subBass = audioCtx.createOscillator();
-  const subBassGain = audioCtx.createGain();
-  subBass.type = 'sine';
-  subBass.frequency.setValueAtTime(45, audioCtx.currentTime);
-  subBassGain.gain.setValueAtTime(0, audioCtx.currentTime);
-  subBassGain.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + 2);
-  // Slow pulse every 2 bars
-  const lfoSub = audioCtx.createOscillator();
-  const lfoSubGain = audioCtx.createGain();
-  lfoSub.frequency.value = 0.5; // 0.5 Hz = 1 pulse per 2 seconds
-  lfoSubGain.gain.value = 0.08;
-  lfoSub.connect(lfoSubGain);
-  lfoSubGain.connect(subBassGain.gain);
-  subBass.connect(subBassGain);
-  subBassGain.connect(audioCtx.destination);
-  
-  // Atmospheric pad (mid-range, slightly detuned for width)
-  const pad1 = audioCtx.createOscillator();
-  const pad2 = audioCtx.createOscillator();
-  const padGain = audioCtx.createGain();
-  const padFilter = audioCtx.createBiquadFilter();
-  pad1.type = 'sawtooth';
-  pad2.type = 'sawtooth';
-  pad1.frequency.value = 220; // A3
-  pad2.frequency.value = 221.5; // slightly detuned for chorus effect
-  padFilter.type = 'lowpass';
-  padFilter.frequency.value = 800;
-  padFilter.Q.value = 2;
-  padGain.gain.setValueAtTime(0, audioCtx.currentTime);
-  padGain.gain.linearRampToValueAtTime(0.04, audioCtx.currentTime + 3);
-  pad1.connect(padFilter);
-  pad2.connect(padFilter);
-  padFilter.connect(padGain);
-  padGain.connect(audioCtx.destination);
-  
-  // High atmospheric shimmer (ZHU-style synth top)
-  const shimmer = audioCtx.createOscillator();
-  const shimmerGain = audioCtx.createGain();
-  const shimmerFilter = audioCtx.createBiquadFilter();
-  shimmer.type = 'triangle';
-  shimmer.frequency.value = 880; // A5
-  shimmerFilter.type = 'highpass';
-  shimmerFilter.frequency.value = 600;
-  shimmerGain.gain.setValueAtTime(0, audioCtx.currentTime);
-  shimmerGain.gain.linearRampToValueAtTime(0.02, audioCtx.currentTime + 4);
-  // Very slow shimmer fade
-  const lfoShimmer = audioCtx.createOscillator();
-  const lfoShimmerGain = audioCtx.createGain();
-  lfoShimmer.frequency.value = 0.2; // very slow
-  lfoShimmerGain.gain.value = 0.015;
-  lfoShimmer.connect(lfoShimmerGain);
-  lfoShimmerGain.connect(shimmerGain.gain);
-  shimmer.connect(shimmerFilter);
-  shimmerFilter.connect(shimmerGain);
-  shimmerGain.connect(audioCtx.destination);
-  
-  // Start all oscillators
-  [subBass, lfoSub, pad1, pad2, shimmer, lfoShimmer].forEach(osc => osc.start());
-  nodes.push(subBass, lfoSub, pad1, pad2, shimmer, lfoShimmer);
-  
-  // Return cleanup function
+  const masterGain = audioCtx.createGain();
+  masterGain.gain.setValueAtTime(0.8, now);
+  masterGain.connect(audioCtx.destination);
+  nodes.push(masterGain);
+
+  // === SECTION 1: Intro (0-18s) - Sparse, dark ===
+  // Sub-bass drone
+  const subDrone = audioCtx.createOscillator();
+  const subDroneGain = audioCtx.createGain();
+  subDrone.type = 'sine';
+  subDrone.frequency.value = 40;
+  subDroneGain.gain.setValueAtTime(0, now);
+  subDroneGain.gain.linearRampToValueAtTime(0.2, now + 3);
+  subDroneGain.gain.setValueAtTime(0.2, now + 18);
+  subDroneGain.gain.linearRampToValueAtTime(0, now + 20); // fade for drop section
+  subDrone.connect(subDroneGain);
+  subDroneGain.connect(masterGain);
+  subDrone.start(now);
+  subDrone.stop(now + 20);
+  nodes.push(subDrone, subDroneGain);
+
+  // Opening filter sweep (0-18s)
+  const sweepOsc = audioCtx.createOscillator();
+  const sweepGain = audioCtx.createGain();
+  const sweepFilter = audioCtx.createBiquadFilter();
+  sweepOsc.type = 'sawtooth';
+  sweepOsc.frequency.value = 110;
+  sweepFilter.type = 'lowpass';
+  sweepFilter.frequency.setValueAtTime(200, now);
+  sweepFilter.frequency.linearRampToValueAtTime(2000, now + 18);
+  sweepFilter.Q.value = 8;
+  sweepGain.gain.setValueAtTime(0, now);
+  sweepGain.gain.linearRampToValueAtTime(0.05, now + 2);
+  sweepGain.gain.setValueAtTime(0.05, now + 16);
+  sweepGain.gain.linearRampToValueAtTime(0, now + 18);
+  sweepOsc.connect(sweepFilter);
+  sweepFilter.connect(sweepGain);
+  sweepGain.connect(masterGain);
+  sweepOsc.start(now);
+  sweepOsc.stop(now + 18);
+  nodes.push(sweepOsc, sweepGain, sweepFilter);
+
+  // === SECTION 2: Build (18-33s) - Fleet activates ===
+  // Kick drum pattern (using buffer)
+  const bpm = 128;
+  const beatLen = 60 / bpm;
+  // Create kick using oscillator burst
+  for (let i = 0; i < 20; i++) {
+    const kickTime = now + 18 + i * beatLen;
+    const kick = audioCtx.createOscillator();
+    const kickGain = audioCtx.createGain();
+    kick.type = 'sine';
+    kick.frequency.setValueAtTime(150, kickTime);
+    kick.frequency.exponentialRampToValueAtTime(40, kickTime + 0.1);
+    kickGain.gain.setValueAtTime(0, kickTime);
+    kickGain.gain.linearRampToValueAtTime(0.4, kickTime + 0.01);
+    kickGain.gain.exponentialRampToValueAtTime(0.001, kickTime + 0.3);
+    kick.connect(kickGain);
+    kickGain.connect(masterGain);
+    kick.start(kickTime);
+    kick.stop(kickTime + 0.3);
+    nodes.push(kick, kickGain);
+  }
+
+  // Synth stab (every 2 beats from 18s)
+  const stabNotes = [220, 220, 293.66, 220, 246.94, 220, 293.66, 329.63];
+  stabNotes.forEach((freq, i) => {
+    const stabTime = now + 18 + i * (beatLen * 2);
+    const stab = audioCtx.createOscillator();
+    const stabGain = audioCtx.createGain();
+    const stabFilter = audioCtx.createBiquadFilter();
+    stab.type = 'sawtooth';
+    stab.frequency.value = freq;
+    stabFilter.type = 'bandpass';
+    stabFilter.frequency.value = freq * 2;
+    stabFilter.Q.value = 5;
+    stabGain.gain.setValueAtTime(0, stabTime);
+    stabGain.gain.linearRampToValueAtTime(0.08, stabTime + 0.02);
+    stabGain.gain.exponentialRampToValueAtTime(0.001, stabTime + 0.15);
+    stab.connect(stabFilter);
+    stabFilter.connect(stabGain);
+    stabGain.connect(masterGain);
+    stab.start(stabTime);
+    stab.stop(stabTime + 0.2);
+    nodes.push(stab, stabGain, stabFilter);
+  });
+
+  // Bass line (18-33s)
+  const bassNotes = [55, 55, 55, 73.42, 55, 55, 65.41, 55];
+  bassNotes.forEach((freq, i) => {
+    const bassTime = now + 18 + i * (beatLen * 2);
+    const bass = audioCtx.createOscillator();
+    const bassGain = audioCtx.createGain();
+    bass.type = 'sawtooth';
+    bass.frequency.value = freq;
+    bassGain.gain.setValueAtTime(0, bassTime);
+    bassGain.gain.linearRampToValueAtTime(0.15, bassTime + 0.02);
+    bassGain.gain.exponentialRampToValueAtTime(0.05, bassTime + beatLen * 1.8);
+    bassGain.gain.setValueAtTime(0, bassTime + beatLen * 2 - 0.01);
+    bass.connect(bassGain);
+    bassGain.connect(masterGain);
+    bass.start(bassTime);
+    bass.stop(bassTime + beatLen * 2);
+    nodes.push(bass, bassGain);
+  });
+
+  // === SECTION 3: Tension / Pre-Drop (33-42s) ===
+  // High tense string pad
+  const tensePad = audioCtx.createOscillator();
+  const tensePadGain = audioCtx.createGain();
+  const tensePadFilter = audioCtx.createBiquadFilter();
+  tensePad.type = 'sawtooth';
+  tensePad.frequency.value = 880;
+  tensePadFilter.type = 'highpass';
+  tensePadFilter.frequency.value = 600;
+  tensePadGain.gain.setValueAtTime(0, now + 33);
+  tensePadGain.gain.linearRampToValueAtTime(0.06, now + 35);
+  tensePadGain.gain.linearRampToValueAtTime(0.12, now + 42); // swell to drop
+  tensePad.connect(tensePadFilter);
+  tensePadFilter.connect(tensePadGain);
+  tensePadGain.connect(masterGain);
+  tensePad.start(now + 33);
+  tensePad.stop(now + 43);
+  nodes.push(tensePad, tensePadGain, tensePadFilter);
+
+  // Snare roll building into drop (38-42s)
+  for (let i = 0; i < 32; i++) {
+    const snareTime = now + 38 + i * (4 / 32);
+    const snare = audioCtx.createOscillator();
+    const snareGain = audioCtx.createGain();
+    const snareNoise = audioCtx.createOscillator();
+    snare.type = 'triangle';
+    snare.frequency.value = 200 + Math.random() * 100;
+    snareNoise.type = 'sawtooth';
+    snareNoise.frequency.value = 1000 + Math.random() * 500;
+    const vol = 0.02 + (i / 32) * 0.08; // gets louder
+    snareGain.gain.setValueAtTime(0, snareTime);
+    snareGain.gain.linearRampToValueAtTime(vol, snareTime + 0.01);
+    snareGain.gain.exponentialRampToValueAtTime(0.001, snareTime + 0.05);
+    snare.connect(snareGain);
+    snareNoise.connect(snareGain);
+    snareGain.connect(masterGain);
+    snare.start(snareTime);
+    snare.stop(snareTime + 0.06);
+    snareNoise.start(snareTime);
+    snareNoise.stop(snareTime + 0.06);
+    nodes.push(snare, snareGain, snareNoise);
+  }
+
+  // === SECTION 4: THE DROP (42-45s) ===
+  // Big sub bass slam
+  const dropBass = audioCtx.createOscillator();
+  const dropBassGain = audioCtx.createGain();
+  dropBass.type = 'sine';
+  dropBass.frequency.setValueAtTime(60, now + 42);
+  dropBassGain.gain.setValueAtTime(0, now + 42);
+  dropBassGain.gain.linearRampToValueAtTime(0.5, now + 42.02);
+  dropBassGain.gain.setValueAtTime(0.4, now + 45);
+  dropBass.connect(dropBassGain);
+  dropBassGain.connect(masterGain);
+  dropBass.start(now + 42);
+  dropBass.stop(now + 60);
+  nodes.push(dropBass, dropBassGain);
+
+  // Bright synth lead at drop
+  const dropLead = audioCtx.createOscillator();
+  const dropLeadGain = audioCtx.createGain();
+  const dropLeadFilter = audioCtx.createBiquadFilter();
+  dropLead.type = 'square';
+  dropLead.frequency.value = 440;
+  dropLeadFilter.type = 'lowpass';
+  dropLeadFilter.frequency.setValueAtTime(4000, now + 42);
+  dropLeadFilter.frequency.linearRampToValueAtTime(1000, now + 45);
+  dropLeadGain.gain.setValueAtTime(0, now + 42);
+  dropLeadGain.gain.linearRampToValueAtTime(0.12, now + 42.02);
+  dropLeadGain.gain.linearRampToValueAtTime(0, now + 45);
+  dropLead.connect(dropLeadFilter);
+  dropLeadFilter.connect(dropLeadGain);
+  dropLeadGain.connect(masterGain);
+  dropLead.start(now + 42);
+  dropLead.stop(now + 46);
+  nodes.push(dropLead, dropLeadGain, dropLeadFilter);
+
+  // Kick every beat from drop onward (42-60s)
+  for (let i = 0; i < 24; i++) {
+    const kickTime = now + 42 + i * beatLen;
+    const kick = audioCtx.createOscillator();
+    const kickGain = audioCtx.createGain();
+    kick.type = 'sine';
+    kick.frequency.setValueAtTime(150, kickTime);
+    kick.frequency.exponentialRampToValueAtTime(40, kickTime + 0.1);
+    kickGain.gain.setValueAtTime(0, kickTime);
+    kickGain.gain.linearRampToValueAtTime(0.5, kickTime + 0.01);
+    kickGain.gain.exponentialRampToValueAtTime(0.001, kickTime + 0.25);
+    kick.connect(kickGain);
+    kickGain.connect(masterGain);
+    kick.start(kickTime);
+    kick.stop(kickTime + 0.3);
+    nodes.push(kick, kickGain);
+  }
+
+  // === SECTION 5: Resolution (45-60s) ===
+  // Hypnotic bass groove
+  const resolveBass = audioCtx.createOscillator();
+  const resolveBassGain = audioCtx.createGain();
+  resolveBass.type = 'sawtooth';
+  resolveBass.frequency.value = 55;
+  resolveBassGain.gain.setValueAtTime(0, now + 45);
+  resolveBassGain.gain.linearRampToValueAtTime(0.1, now + 46);
+  resolveBassGain.gain.setValueAtTime(0.1, now + 58);
+  resolveBassGain.gain.linearRampToValueAtTime(0, now + 60);
+  resolveBass.connect(resolveBassGain);
+  resolveBassGain.connect(masterGain);
+  resolveBass.start(now + 45);
+  resolveBass.stop(now + 61);
+  nodes.push(resolveBass, resolveBassGain);
+
   return () => {
     nodes.forEach(node => {
-      try { (node as OscillatorNode).stop(); } catch {}
+      if (node instanceof OscillatorNode) {
+        try { node.stop(); } catch {}
+      }
     });
+    masterGain.disconnect();
   };
 }
 
@@ -694,34 +852,44 @@ export default function DemoPage() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === 'Space') {
         e.preventDefault();
-        setIsPlaying(prev => !prev);
+        setIsPlaying(prev => { if (!prev) startAudio(); return !prev; });
       }
     };
 
+    // First click anywhere starts audio
+    const handleFirstClick = () => {
+      startAudio();
+      window.removeEventListener('click', handleFirstClick);
+    };
+    window.addEventListener('click', handleFirstClick);
+
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('click', handleFirstClick);
+    };
   }, []);
 
-  // Audio management
-  useEffect(() => {
-    if (isPlaying && !audioCtxRef.current && !isMuted) {
-      // Must be triggered by user interaction (already satisfied by play button click)
-      audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-      cleanupAudioRef.current = createZHUAmbience(audioCtxRef.current);
+  // Audio management — must be triggered by user gesture
+  const startAudio = () => {
+    if (!audioCtxRef.current && !isMuted) {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      audioCtxRef.current = new AudioContextClass();
+      cleanupAudioRef.current = createDemoAudio(audioCtxRef.current);
+    } else if (audioCtxRef.current?.state === 'suspended' && !isMuted) {
+      audioCtxRef.current.resume();
     }
-    
+  };
+
+  useEffect(() => {
     if (!isPlaying && audioCtxRef.current) {
       audioCtxRef.current.suspend();
     }
-    
-    if (isPlaying && audioCtxRef.current?.state === 'suspended' && !isMuted) {
-      audioCtxRef.current.resume();
-    }
-
     if (isMuted && audioCtxRef.current) {
       audioCtxRef.current.suspend();
+    } else if (!isMuted && isPlaying && audioCtxRef.current?.state === 'suspended') {
+      audioCtxRef.current.resume();
     }
-    
     return () => {
       if (cleanupAudioRef.current) cleanupAudioRef.current();
     };
@@ -858,7 +1026,7 @@ export default function DemoPage() {
         <div className="glass border-t border-white/5 px-6 py-4">
           <div className="max-w-7xl mx-auto flex items-center gap-6">
             <button
-              onClick={() => setIsPlaying(!isPlaying)}
+              onClick={() => { setIsPlaying(!isPlaying); if (!isPlaying) startAudio(); }}
               className="w-10 h-10 rounded-full bg-cyan-500/20 hover:bg-cyan-500/30 flex items-center justify-center transition-colors"
             >
               {isPlaying ? (
