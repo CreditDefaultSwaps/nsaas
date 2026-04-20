@@ -70,6 +70,7 @@ export interface Build {
   agent_logs?: string | null;
   pr_number?: number | null;
   commit_sha?: string | null;
+  deployed_url?: string | null;
   features?: {
     title: string;
   };

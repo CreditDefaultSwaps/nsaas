@@ -87,13 +87,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Normalize priority to schema format (p0/p1/p2)
+    // Normalize priority to schema format (low/medium/high/urgent)
     const priorityMap: Record<string, string> = {
-      'urgent': 'p0', 'high': 'p0',
-      'medium': 'p1', 'tonight': 'p1', 'p1': 'p1',
-      'low': 'p2', 'this week': 'p2', 'p2': 'p2',
+      'urgent': 'urgent', 'high': 'high',
+      'medium': 'medium', 'tonight': 'high', 'p1': 'medium',
+      'low': 'low', 'this week': 'low', 'p2': 'low',
     };
-    const normalizedPriority = priorityMap[priority?.toLowerCase()] || 'p1';
+    const normalizedPriority = priorityMap[priority?.toLowerCase()] || 'medium';
 
     // Verify repo belongs to user's org (optional — skip if no repo_id)
     if (repo_id) {
@@ -123,10 +123,10 @@ export async function POST(request: NextRequest) {
         id: featureId,
         org_id: (user as any).org_id,
         repo_id: repo_id || null,
-        requested_by: (user as any).id,
+        created_by: (user as any).id,
         title: title.trim(),
         description: description.trim(),
-        priority: normalizedPriority,
+        priority: normalizedPriority as 'low' | 'medium' | 'high' | 'urgent',
         status: 'pending',
       })
       .select()
@@ -151,6 +151,54 @@ export async function POST(request: NextRequest) {
     if (buildError) {
       console.error('Error creating build:', buildError);
       // Don't fail the request, but log the error
+    }
+
+    // Send Telegram alert to Alex
+    try {
+      const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN;
+      const telegramChatId = '2105672582'; // Alex's chat ID
+      
+      if (telegramBotToken) {
+        // Get org name
+        const { data: org } = await supabaseAdmin
+          .from('organizations')
+          .select('name')
+          .eq('id', (user as any).org_id)
+          .single();
+
+        const alertMessage = [
+          '🛰️ *New NightShift Request*',
+          '',
+          `👤 *From:* ${(user as any).full_name || 'Unknown'} (${(user as any).email || 'Unknown'})`,
+          `🏢 *Org:* ${org?.name || 'Unknown'}`,
+          '',
+          `📋 *Product:* ${title}`,
+          '',
+          '📝 *Description:*',
+          description.trim(),
+          '',
+          `⚡ *Priority:* ${normalizedPriority}`,
+          techPreferences ? `🔧 *Tech:* ${techPreferences}` : '',
+          '',
+          '🔗 *Review:* https://nsaas-nine.vercel.app/admin/requests',
+          '',
+          '---',
+          '*Brief the fleet when ready.*',
+        ].filter(Boolean).join('\n');
+
+        await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: telegramChatId,
+            text: alertMessage,
+            parse_mode: 'Markdown',
+          }),
+        });
+      }
+    } catch (alertErr) {
+      // Don't fail the request if alert fails
+      console.error('Telegram alert failed:', alertErr);
     }
 
     return NextResponse.json({ feature }, { status: 201 });

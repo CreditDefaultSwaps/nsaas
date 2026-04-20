@@ -186,7 +186,11 @@ export default function Home() {
       >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
-            <Logo />
+            <a href="/" className="flex items-center">
+              <span className="text-xl font-bold tracking-tight">
+                <span className="text-white">Night</span><span className="gradient-text">Shift</span>
+              </span>
+            </a>
             <div className="hidden md:flex items-center gap-8">
               <a
                 href="#how-it-works"

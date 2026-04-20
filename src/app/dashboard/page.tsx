@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import useSWR from 'swr';
 import { fetchFeatures, fetchBuilds } from '@/lib/api';
-import { Button, Card, CardContent, Input, Textarea, Select, SelectItem, Badge, Skeleton } from '@/components/ui';
+import { Button, Card, CardContent, Input, Textarea, Badge, Skeleton } from '@/components/ui';
 import { 
   Plus, 
   Rocket,
@@ -21,22 +21,41 @@ import {
   Box,
   ArrowRight,
   AlertCircle,
-  Loader2
+  Loader2,
+  SatelliteDish,
+  Satellite,
+  LayoutDashboard
 } from '@/components/icons';
 import { formatDate, formatDateTime } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 
 type Tab = 'overview' | 'new-request' | 'builds' | 'morning-brief';
 
-const techOptions = [
-  { value: 'nextjs-supabase', label: 'Next.js + Supabase' },
-  { value: 'react-firebase', label: 'React + Firebase' },
-  { value: 'vue-postgres', label: 'Vue + Postgres' },
-  { value: 'other', label: 'Other' },
-];
+interface User {
+  id: string;
+  email: string;
+  full_name?: string;
+  org_id: string;
+  organizations?: {
+    name: string;
+    plan?: string;
+  };
+}
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<Tab>('overview');
+  const [user, setUser] = useState<User | null>(null);
+
+  // Fetch user data
+  useEffect(() => {
+    fetch('/api/user')
+      .then(res => res.json())
+      .then(data => {
+        if (data.user) setUser(data.user);
+      })
+      .catch(console.error);
+  }, []);
 
   const { data: features, error: featuresError, isLoading: featuresLoading, mutate: mutateFeatures } = useSWR(
     'features',
@@ -61,15 +80,21 @@ export default function DashboardPage() {
     return 'Good evening';
   };
 
+  // Get first name
+  const firstName = user?.full_name?.split(' ')[0] || 'there';
+
   // Calculate stats
-  const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const shippedThisMonth = builds?.filter(b => 
-    b.status === 'success' && 
-    new Date(b.created_at) >= startOfMonth
-  ).length || 0;
-  const activeBuildsCount = builds?.filter(b => b.status === 'running').length || 0;
-  const recentBuilds = builds?.slice(0, 3) || [];
+  const requestsSubmitted = features?.length || 0;
+  const buildsCompleted = builds?.filter(b => b.status === 'success').length || 0;
+  const activeBuildsCount = builds?.filter(b => b.status === 'running' || b.status === 'queued').length || 0;
+  const recentFeatures = features?.slice(0, 5) || [];
+
+  // Get plan badge
+  const planTier = user?.organizations?.plan || 'idea';
+  const planLabel = planTier === 'fleet' ? 'Fleet' : planTier === 'builder' ? 'Builder' : 'Idea';
+  const planColor = planTier === 'fleet' ? 'bg-neon-cyan/10 text-neon-cyan border-neon-cyan/30' : 
+                    planTier === 'builder' ? 'bg-neon-purple/10 text-neon-purple border-neon-purple/30' :
+                    'bg-amber-500/10 text-amber-400 border-amber-500/30';
 
   if (error) {
     return (
@@ -98,8 +123,8 @@ export default function DashboardPage() {
             Manage your fleet and track shipments through the night
           </p>
         </div>
-        <Badge variant="outline" className="bg-neon-purple/10 text-neon-purple border-neon-purple/30">
-          Idea Plan
+        <Badge variant="outline" className={planColor}>
+          {planLabel} Plan
         </Badge>
       </div>
 
@@ -107,7 +132,7 @@ export default function DashboardPage() {
       <div className="border-b border-white/10">
         <nav className="flex gap-6">
           {[
-            { id: 'overview', label: 'Overview', icon: LayoutDashboardIcon },
+            { id: 'overview', label: 'Overview', icon: LayoutDashboard },
             { id: 'new-request', label: 'New Request', icon: Plus },
             { id: 'builds', label: 'Builds', icon: Box },
             { id: 'morning-brief', label: 'Morning Brief', icon: Sun },
@@ -148,12 +173,13 @@ export default function DashboardPage() {
           {activeTab === 'overview' && (
             <OverviewTab
               greeting={getGreeting()}
-              shippedThisMonth={shippedThisMonth}
+              firstName={firstName}
+              requestsSubmitted={requestsSubmitted}
+              buildsCompleted={buildsCompleted}
               activeBuildsCount={activeBuildsCount}
-              recentBuilds={recentBuilds}
+              recentFeatures={recentFeatures}
               isLoading={isLoading}
               onNewRequest={() => setActiveTab('new-request')}
-              features={features || []}
             />
           )}
           {activeTab === 'new-request' && (
@@ -169,7 +195,7 @@ export default function DashboardPage() {
             <BuildsTab builds={builds || []} isLoading={isLoading} />
           )}
           {activeTab === 'morning-brief' && (
-            <MorningBriefTab builds={builds || []} isLoading={isLoading} />
+            <MorningBriefTab builds={builds || []} features={features || []} isLoading={isLoading} />
           )}
         </motion.div>
       </AnimatePresence>
@@ -180,20 +206,22 @@ export default function DashboardPage() {
 // Overview Tab Component
 function OverviewTab({
   greeting,
-  shippedThisMonth,
+  firstName,
+  requestsSubmitted,
+  buildsCompleted,
   activeBuildsCount,
-  recentBuilds,
+  recentFeatures,
   isLoading,
   onNewRequest,
-  features,
 }: {
   greeting: string;
-  shippedThisMonth: number;
+  firstName: string;
+  requestsSubmitted: number;
+  buildsCompleted: number;
   activeBuildsCount: number;
-  recentBuilds: any[];
+  recentFeatures: any[];
   isLoading: boolean;
   onNewRequest: () => void;
-  features: any[];
 }) {
   const hasActiveBuilds = activeBuildsCount > 0;
 
@@ -204,7 +232,7 @@ function OverviewTab({
         <div className="absolute top-0 right-0 w-64 h-64 bg-neon-purple/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         <div className="relative z-10">
           <h2 className="text-xl font-semibold text-white">
-            {greeting}, Alex. Your fleet is standing by.
+            {greeting}, {firstName}. Your fleet is standing by.
           </h2>
           <p className="text-zinc-400 mt-2">
             {hasActiveBuilds 
@@ -217,32 +245,31 @@ function OverviewTab({
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <StatCard
-          label="Products shipped this month"
-          value={shippedThisMonth}
+          label="Requests Submitted"
+          value={requestsSubmitted}
           icon={<Rocket className="h-5 w-5" />}
+          loading={isLoading}
+          color="purple"
+        />
+        <StatCard
+          label="Builds Completed"
+          value={buildsCompleted}
+          icon={<CheckCircle2 className="h-5 w-5" />}
           loading={isLoading}
           color="emerald"
         />
         <StatCard
-          label="Active builds"
+          label="Active Builds"
           value={activeBuildsCount}
           icon={<Loader2 className="h-5 w-5" />}
           loading={isLoading}
           color="cyan"
         />
-        <StatCard
-          label="Sandboxes"
-          value="1 / 1"
-          icon={<Box className="h-5 w-5" />}
-          loading={isLoading}
-          color="purple"
-          isText
-        />
       </div>
 
-      {/* Recent Builds */}
+      {/* Recent Requests */}
       <div>
-        <h3 className="text-lg font-semibold text-white mb-4">Recent Builds</h3>
+        <h3 className="text-lg font-semibold text-white mb-4">Recent Requests</h3>
         {isLoading ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
@@ -254,86 +281,64 @@ function OverviewTab({
               </Card>
             ))}
           </div>
-        ) : recentBuilds.length > 0 ? (
+        ) : recentFeatures.length > 0 ? (
           <div className="space-y-3">
-            {recentBuilds.map((build, index) => (
+            {recentFeatures.map((feature, index) => (
               <motion.div
-                key={build.id}
+                key={feature.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
               >
-                <Card className="glass glass-hover">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <BuildStatusBadge status={build.status} />
-                        <span className="font-medium text-white">
-                          {build.features?.title || 'Untitled'}
-                        </span>
+                <Link href={`/dashboard/requests/${feature.id}`}>
+                  <Card className="glass glass-hover cursor-pointer">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <FeatureStatusBadge status={feature.status} />
+                          <span className="font-medium text-white">
+                            {feature.title || 'Untitled'}
+                          </span>
+                        </div>
+                        <div className="text-sm text-zinc-400">
+                          {formatDate(feature.created_at)}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-4 text-sm text-zinc-400">
-                        <span>{formatDate(build.created_at)}</span>
-                        {build.status === 'success' && build.pr_number && (
-                          <a
-                            href={`#`}
-                            className="text-neon-cyan hover:underline flex items-center gap-1"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            <Github className="h-4 w-4" />
-                            PR #{build.pr_number}
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                </Link>
               </motion.div>
             ))}
           </div>
         ) : (
           <Card className="glass border-dashed border-zinc-700">
             <CardContent className="p-8 text-center">
-              <Moon className="mx-auto h-8 w-8 text-zinc-500 mb-3" />
-              <p className="text-zinc-400">No builds yet</p>
+              <SatelliteDish className="mx-auto h-12 w-12 text-zinc-500 mb-3" />
+              <p className="text-zinc-400 mb-4">No requests yet</p>
               <Button 
-                variant="ghost" 
-                className="mt-3 text-neon-cyan hover:text-neon-cyan/80"
                 onClick={onNewRequest}
+                className="bg-gradient-to-r from-cyan-500 to-purple-500 text-white"
               >
-                Start your first request →
+                Submit your first request to brief the fleet
               </Button>
             </CardContent>
           </Card>
         )}
       </div>
 
-      {/* CTA Card if no active builds */}
-      {!hasActiveBuilds && !isLoading && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2 }}
-        >
-          <Card 
-            className="glass border-neon-cyan/30 cursor-pointer group"
-            onClick={onNewRequest}
-          >
-            <CardContent className="p-6 flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold text-white group-hover:text-neon-cyan transition-colors">
-                  Ready to ship something?
-                </h3>
-                <p className="text-zinc-400 text-sm mt-1">
-                  Start a new request and let the fleet work overnight
-                </p>
-              </div>
-              <ArrowRight className="h-5 w-5 text-zinc-500 group-hover:text-neon-cyan transition-colors" />
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
+      {/* Fleet Status */}
+      <Card className="glass border-neon-cyan/20">
+        <CardContent className="p-4 flex items-center gap-4">
+          <div className="relative">
+            <div className="h-3 w-3 rounded-full bg-emerald-400" />
+            <div className="absolute inset-0 rounded-full bg-emerald-400 animate-ping" style={{ animationDuration: '2s' }} />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-white">Fleet Status</p>
+            <p className="text-sm text-zinc-400">Cyprus is standing by, ready for tonight's shift</p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
@@ -342,47 +347,33 @@ function OverviewTab({
 function NewRequestTab({ onSuccess }: { onSuccess: () => void }) {
   const [productName, setProductName] = useState('');
   const [description, setDescription] = useState('');
-  const [referenceUrls, setReferenceUrls] = useState<string[]>(['']);
-  const [techPreference, setTechPreference] = useState('nextjs-supabase');
+  const [referenceUrls, setReferenceUrls] = useState('');
   const [priority, setPriority] = useState<'tonight' | 'this-week'>('tonight');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-
-  const addReferenceUrl = () => setReferenceUrls([...referenceUrls, '']);
-  const removeReferenceUrl = (index: number) => {
-    setReferenceUrls(referenceUrls.filter((_, i) => i !== index));
-  };
-  const updateReferenceUrl = (index: number, value: string) => {
-    const newUrls = [...referenceUrls];
-    newUrls[index] = value;
-    setReferenceUrls(newUrls);
-  };
+  const [submittedFeatureId, setSubmittedFeatureId] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      // For demo, we'll use a default repo_id
-      const repoId = '00000000-0000-0000-0000-000000000001';
-      
       const response = await fetch('/api/features', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          repo_id: repoId,
           title: productName,
-          description: `${description}\n\nTech Preference: ${techPreference}\nPriority: ${priority}\n\nReference URLs:\n${referenceUrls.filter(u => u).join('\n')}`,
+          description: `${description}\n\nReference URLs:\n${referenceUrls}`,
           priority: priority === 'tonight' ? 'high' : 'medium',
+          techPreferences: priority === 'tonight' ? 'Next.js + Supabase' : undefined,
         }),
       });
 
       if (!response.ok) throw new Error('Failed to create request');
       
+      const data = await response.json();
+      setSubmittedFeatureId(data.feature.id);
       setIsSuccess(true);
-      setTimeout(() => {
-        onSuccess();
-      }, 2000);
     } catch (error) {
       console.error('Error submitting request:', error);
     } finally {
@@ -395,161 +386,156 @@ function NewRequestTab({ onSuccess }: { onSuccess: () => void }) {
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="glass rounded-2xl p-12 text-center border border-emerald-500/30"
+        className="glass rounded-2xl p-12 text-center border border-neon-cyan/30"
       >
-        <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-emerald-500/20 flex items-center justify-center">
-          <CheckCircle2 className="h-8 w-8 text-emerald-400" />
+        <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-neon-cyan/20 flex items-center justify-center relative">
+          <Satellite className="h-10 w-10 text-neon-cyan" />
+          <div className="absolute inset-0 rounded-full bg-neon-cyan/30 animate-ping" style={{ animationDuration: '2s' }} />
         </div>
-        <h3 className="text-xl font-semibold text-white mb-2">
-          Cyprus has been briefed
+        <h3 className="text-2xl font-semibold text-white mb-2">
+          Cyprus has been briefed.
         </h3>
-        <p className="text-zinc-400">
-          Your fleet activates tonight. Check the Morning Brief tab at sunrise.
+        <p className="text-zinc-400 mb-6">
+          Your fleet activates tonight. Check back tomorrow morning.
         </p>
+        {submittedFeatureId && (
+          <Link 
+            href={`/dashboard/requests/${submittedFeatureId}`}
+            className="text-neon-cyan hover:text-neon-cyan/80 transition-colors inline-flex items-center gap-2"
+          >
+            View your request →
+          </Link>
+        )}
       </motion.div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-2xl space-y-6">
-      <Card className="glass">
-        <CardContent className="p-6 space-y-6">
-          {/* Product Name */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-zinc-300">
-              Product name
-            </label>
-            <Input
-              value={productName}
-              onChange={(e) => setProductName(e.target.value)}
-              placeholder="e.g., Customer Portal Dashboard"
-              className="bg-slate-800/50 border-slate-700 text-white placeholder:text-zinc-500"
-              required
-            />
-          </div>
+    <div className="max-w-2xl">
+      {/* Header */}
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold text-white mb-2">Brief the Fleet</h2>
+        <p className="text-zinc-400">
+          Describe what you want built. Cyprus and the fleet activate tonight.
+        </p>
+      </div>
 
-          {/* Description */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-zinc-300">
-              Description
-            </label>
-            <Textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe what you want built in plain English. What does it do? Who is it for? What should it look like?"
-              className="bg-slate-800/50 border-slate-700 text-white placeholder:text-zinc-500 min-h-[120px]"
-              required
-            />
-          </div>
-
-          {/* Reference URLs */}
-          <div className="space-y-3">
-            <label className="text-sm font-medium text-zinc-300">
-              Reference URLs
-            </label>
-            <p className="text-xs text-zinc-500">
-              Paste any URLs for inspiration, examples, or existing products
-            </p>
-            {referenceUrls.map((url, index) => (
-              <div key={index} className="flex gap-2">
-                <Input
-                  value={url}
-                  onChange={(e) => updateReferenceUrl(index, e.target.value)}
-                  placeholder="https://..."
-                  className="bg-slate-800/50 border-slate-700 text-white placeholder:text-zinc-500 flex-1"
-                />
-                {referenceUrls.length > 1 && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeReferenceUrl(index)}
-                    className="text-zinc-500 hover:text-rose-400"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-            ))}
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={addReferenceUrl}
-              className="text-neon-cyan hover:text-neon-cyan/80"
-            >
-              <Plus className="h-4 w-4 mr-1" />
-              Add URL
-            </Button>
-          </div>
-
-          {/* Tech Preferences */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-zinc-300">
-              Tech preferences <span className="text-zinc-500">(optional)</span>
-            </label>
-            <Select
-              value={techPreference}
-              onChange={(e) => setTechPreference(e.target.value)}
-              className="bg-slate-800/50 border-slate-700 text-white"
-            >
-              {techOptions.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </Select>
-          </div>
-
-          {/* Priority */}
-          <div className="space-y-3">
-            <label className="text-sm font-medium text-zinc-300">Priority</label>
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="priority"
-                  value="tonight"
-                  checked={priority === 'tonight'}
-                  onChange={(e) => setPriority(e.target.value as 'tonight')}
-                  className="text-neon-cyan focus:ring-neon-cyan"
-                />
-                <span className="text-zinc-300">Tonight</span>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <Card className="glass">
+          <CardContent className="p-6 space-y-6">
+            {/* Product Name */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-zinc-300">
+                What are you building?
               </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="priority"
-                  value="this-week"
-                  checked={priority === 'this-week'}
-                  onChange={(e) => setPriority(e.target.value as 'this-week')}
-                  className="text-neon-cyan focus:ring-neon-cyan"
-                />
-                <span className="text-zinc-300">This week</span>
-              </label>
+              <Input
+                value={productName}
+                onChange={(e) => setProductName(e.target.value)}
+                placeholder="e.g., Customer Portal Dashboard"
+                className="bg-slate-800/50 border-slate-700 text-white placeholder:text-zinc-500"
+                required
+              />
             </div>
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* Submit Button */}
-      <Button
-        type="submit"
-        disabled={isSubmitting || !productName || !description}
-        className="w-full bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-medium rounded-xl hover:opacity-90 transition-opacity neon-glow"
-      >
-        {isSubmitting ? (
-          <>
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            Briefing the fleet...
-          </>
-        ) : (
-          <>
-            Brief the Fleet →
-          </>
-        )}
-      </Button>
-    </form>
+            {/* Description */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-zinc-300">
+                Describe it like you&apos;re texting a friend
+              </label>
+              <Textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="I want a dashboard that shows my Stripe revenue by day, with a chart and a table of recent transactions. It should look clean and dark."
+                className="bg-slate-800/50 border-slate-700 text-white placeholder:text-zinc-500 min-h-[140px]"
+                required
+              />
+            </div>
+
+            {/* Reference URLs */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-zinc-300">
+                Any examples or references? <span className="text-zinc-500">(optional)</span>
+              </label>
+              <Textarea
+                value={referenceUrls}
+                onChange={(e) => setReferenceUrls(e.target.value)}
+                placeholder="Paste URLs to inspiration, examples, or existing products..."
+                className="bg-slate-800/50 border-slate-700 text-white placeholder:text-zinc-500 min-h-[80px]"
+              />
+            </div>
+
+            {/* Priority */}
+            <div className="space-y-3">
+              <label className="text-sm font-medium text-zinc-300">When do you need it?</label>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                    priority === 'tonight' ? 'border-neon-cyan bg-neon-cyan/20' : 'border-slate-600 group-hover:border-slate-500'
+                  }`}>
+                    {priority === 'tonight' && <div className="w-2.5 h-2.5 rounded-full bg-neon-cyan" />}
+                  </div>
+                  <input
+                    type="radio"
+                    name="priority"
+                    value="tonight"
+                    checked={priority === 'tonight'}
+                    onChange={(e) => setPriority(e.target.value as 'tonight')}
+                    className="sr-only"
+                  />
+                  <div>
+                    <span className={`block ${priority === 'tonight' ? 'text-white' : 'text-zinc-300'}`}>
+                      Tonight
+                    </span>
+                    <span className="text-xs text-zinc-500">Ships by morning</span>
+                  </div>
+                </label>
+
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                    priority === 'this-week' ? 'border-neon-cyan bg-neon-cyan/20' : 'border-slate-600 group-hover:border-slate-500'
+                  }`}>
+                    {priority === 'this-week' && <div className="w-2.5 h-2.5 rounded-full bg-neon-cyan" />}
+                  </div>
+                  <input
+                    type="radio"
+                    name="priority"
+                    value="this-week"
+                    checked={priority === 'this-week'}
+                    onChange={(e) => setPriority(e.target.value as 'this-week')}
+                    className="sr-only"
+                  />
+                  <div>
+                    <span className={`block ${priority === 'this-week' ? 'text-white' : 'text-zinc-300'}`}>
+                      This week
+                    </span>
+                    <span className="text-xs text-zinc-500">Within 3-5 days</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Submit Button */}
+        <Button
+          type="submit"
+          disabled={isSubmitting || !productName || !description}
+          className="w-full bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-medium rounded-xl hover:opacity-90 transition-opacity neon-glow h-12 text-base"
+        >
+          {isSubmitting ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Briefing the fleet...
+            </>
+          ) : (
+            <>
+              Brief the Fleet
+              <Rocket className="h-4 w-4 ml-2" />
+            </>
+          )}
+        </Button>
+      </form>
+    </div>
   );
 }
 
@@ -677,8 +663,15 @@ function BuildsTab({ builds, isLoading }: { builds: any[]; isLoading: boolean })
 }
 
 // Morning Brief Tab Component
-function MorningBriefTab({ builds, isLoading }: { builds: any[]; isLoading: boolean }) {
-  const latestBuild = builds.find(b => b.status === 'success');
+function MorningBriefTab({ builds, features, isLoading }: { builds: any[]; features: any[]; isLoading: boolean }) {
+  // Find the latest completed build with a feature
+  const latestCompletedBuild = builds.find(b => b.status === 'success');
+  const latestFeature = latestCompletedBuild 
+    ? features.find(f => f.id === latestCompletedBuild.feature_id)
+    : null;
+  
+  // Check if there's a build in progress
+  const inProgressBuild = builds.find(b => b.status === 'running' || b.status === 'queued');
 
   if (isLoading) {
     return (
@@ -696,38 +689,104 @@ function MorningBriefTab({ builds, isLoading }: { builds: any[]; isLoading: bool
     <Card className="glass border-neon-purple/30">
       <CardContent className="p-8">
         <div className="flex items-center gap-3 mb-6">
-          <Moon className="h-6 w-6 text-neon-cyan" />
-          <h2 className="text-xl font-semibold text-white">
-            Cyprus — Morning Handoff
-          </h2>
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neon-purple/20 border border-neon-purple/30">
+            <Moon className="h-5 w-5 text-neon-cyan" />
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold text-white">
+              Cyprus — Morning Handoff
+            </h2>
+            <p className="text-sm text-zinc-400">
+              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+            </p>
+          </div>
         </div>
 
-        {latestBuild ? (
-          <div className="space-y-4 font-mono text-sm">
-            <p className="text-zinc-300">Good morning. Here&apos;s what shipped last night:</p>
-            
-            <div className="space-y-2 pl-4 border-l-2 border-emerald-500/50">
-              <p className="text-emerald-400">
-                ✓ {latestBuild.features?.title || 'Product'} — deployed and ready
-              </p>
-              {latestBuild.pr_number && (
-                <p className="text-emerald-400">
-                  ✓ PR #{latestBuild.pr_number} created and ready for review
-                </p>
-              )}
+        {latestCompletedBuild && latestFeature ? (
+          <div className="space-y-6">
+            {/* What was built */}
+            <div className="space-y-4">
+              <p className="text-zinc-300 font-mono text-sm">Good morning. Here&apos;s what shipped last night:</p>
+              
+              <div className="space-y-3 pl-4 border-l-2 border-emerald-500/50">
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-400 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-emerald-400 font-medium">
+                      {latestFeature.title}
+                    </p>
+                    <p className="text-zinc-400 text-sm mt-1">
+                      {latestFeature.description?.split('\n')[0]}
+                    </p>
+                  </div>
+                </div>
+                
+                {latestCompletedBuild.pr_number && (
+                  <div className="flex items-center gap-3">
+                    <Github className="h-5 w-5 text-emerald-400" />
+                    <a 
+                      href={latestFeature.pr_url || '#'} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-emerald-400 hover:underline text-sm"
+                    >
+                      PR #{latestCompletedBuild.pr_number} created and ready for review
+                    </a>
+                  </div>
+                )}
+
+                {latestCompletedBuild.deployed_url && (
+                  <div className="flex items-center gap-3">
+                    <ExternalLink className="h-5 w-5 text-emerald-400" />
+                    <a 
+                      href={latestCompletedBuild.deployed_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-emerald-400 hover:underline text-sm"
+                    >
+                      View live product
+                    </a>
+                  </div>
+                )}
+              </div>
             </div>
 
-            <div className="mt-6 pt-6 border-t border-white/10 space-y-1 text-zinc-400">
+            {/* Agent logs */}
+            {latestCompletedBuild.agent_logs && (
+              <div className="mt-6">
+                <h3 className="text-sm font-medium text-zinc-400 mb-3">Build Notes</h3>
+                <div className="bg-night-800 rounded-lg p-4 font-mono text-xs text-zinc-400 whitespace-pre-wrap max-h-48 overflow-y-auto">
+                  {latestCompletedBuild.agent_logs}
+                </div>
+              </div>
+            )}
+
+            {/* Footer */}
+            <div className="pt-6 border-t border-white/10 space-y-1 text-zinc-400 font-mono text-sm">
               <p>Fleet status: All agents standing by.</p>
               <p>Ready for tonight&apos;s request.</p>
               <p className="text-zinc-500 mt-4">— Cyprus</p>
             </div>
           </div>
+        ) : inProgressBuild ? (
+          <div className="text-center py-8">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-cyan-500/20 flex items-center justify-center relative">
+              <Loader2 className="h-8 w-8 text-cyan-400 animate-spin" />
+            </div>
+            <h3 className="text-lg font-medium text-white mb-2">Cyprus is building tonight...</h3>
+            <p className="text-zinc-400">
+              Your request is being worked on. Check back in the morning for results.
+            </p>
+          </div>
         ) : (
           <div className="text-center py-8">
-            <Moon className="mx-auto h-12 w-12 text-zinc-600 mb-4" />
+            <Sun className="mx-auto h-12 w-12 text-zinc-600 mb-4" />
+            <h3 className="text-lg font-medium text-white mb-2">No morning brief yet</h3>
             <p className="text-zinc-400">
-              Nothing shipped yet. Brief the fleet tonight to wake up to your first product.
+              Your first morning brief will appear after your first shift.
+            </p>
+            <p className="text-zinc-500 text-sm mt-2">
+              Submit a request tonight and wake up to working code.
             </p>
           </div>
         )}
@@ -743,14 +802,12 @@ function StatCard({
   icon,
   loading,
   color = 'cyan',
-  isText = false,
 }: {
   label: string;
   value: number | string;
   icon: React.ReactNode;
   loading: boolean;
   color?: 'cyan' | 'emerald' | 'purple';
-  isText?: boolean;
 }) {
   const colorClasses = {
     cyan: 'text-neon-cyan bg-neon-cyan/10',
@@ -778,9 +835,7 @@ function StatCard({
             {icon}
           </span>
         </div>
-        <p className={`text-2xl font-bold ${isText ? 'text-zinc-200' : 'text-white'}`}>
-          {value}
-        </p>
+        <p className="text-2xl font-bold text-white">{value}</p>
       </CardContent>
     </Card>
   );
@@ -830,10 +885,52 @@ function BuildStatusBadge({ status }: { status: string }) {
   );
 }
 
-function LayoutDashboardIcon({ className }: { className?: string }) {
+function FeatureStatusBadge({ status }: { status: string }) {
+  const configs: Record<string, { bg: string; text: string; dot: string; label: string }> = {
+    pending: {
+      bg: 'bg-amber-500/10',
+      text: 'text-amber-400',
+      dot: 'bg-amber-400',
+      label: 'Pending',
+    },
+    in_progress: {
+      bg: 'bg-cyan-500/10',
+      text: 'text-cyan-400',
+      dot: 'bg-cyan-400 animate-pulse',
+      label: 'In Progress',
+    },
+    building: {
+      bg: 'bg-cyan-500/10',
+      text: 'text-cyan-400',
+      dot: 'bg-cyan-400 animate-pulse',
+      label: 'Building',
+    },
+    testing: {
+      bg: 'bg-purple-500/10',
+      text: 'text-purple-400',
+      dot: 'bg-purple-400 animate-pulse',
+      label: 'Testing',
+    },
+    completed: {
+      bg: 'bg-emerald-500/10',
+      text: 'text-emerald-400',
+      dot: 'bg-emerald-400',
+      label: 'Completed',
+    },
+    failed: {
+      bg: 'bg-rose-500/10',
+      text: 'text-rose-400',
+      dot: 'bg-rose-400',
+      label: 'Failed',
+    },
+  };
+
+  const config = configs[status] || configs.pending;
+
   return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2" />
-    </svg>
+    <div className={`flex items-center gap-2 px-2.5 py-1 rounded-full ${config.bg} border border-${config.text.split('-')[1]}-500/20`}>
+      <div className={`h-2 w-2 rounded-full ${config.dot}`} />
+      <span className={`text-xs font-medium ${config.text}`}>{config.label}</span>
+    </div>
   );
 }
