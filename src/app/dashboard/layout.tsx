@@ -7,15 +7,16 @@ import { Logo } from '@/components/logo';
 import { CommandPalette } from '@/components/ui/command-palette';
 import { useState } from 'react';
 import { supabaseClient } from '@/lib/supabase-client';
-import { 
-  LayoutDashboard, 
-  GitBranch, 
-  Moon, 
+import {
+  LayoutDashboard,
+  GitBranch,
+  Moon,
   Settings,
   Plus,
   Search,
   Bell,
-  LogOut
+  LogOut,
+  CreditCard,
 } from '@/components/icons';
 
 // Check if Clerk is configured
@@ -27,6 +28,7 @@ const navigation = [
   { name: 'Requests', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Repositories', href: '/dashboard/repos', icon: GitBranch },
   { name: 'Active Shifts', href: '/dashboard/builds', icon: Moon },
+  { name: 'Billing', href: '/dashboard/billing', icon: CreditCard },
 ];
 
 export default function DashboardLayout({
