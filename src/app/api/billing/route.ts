@@ -7,7 +7,7 @@ function getStripe(): Stripe | null {
   const key = process.env.STRIPE_SECRET_KEY;
   if (!key || key.includes('placeholder')) return null;
   return new Stripe(key, {
-    apiVersion: '2025-02-24.acacia' as Parameters<typeof Stripe>[1]['apiVersion'],
+    apiVersion: '2025-02-24.acacia' as any,
   });
 }
 
@@ -118,8 +118,8 @@ export async function GET(_request: NextRequest) {
       subscription: subscription
         ? {
             id: subscription.id,
-            currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString(),
-            cancelAtPeriodEnd: subscription.cancel_at_period_end,
+            currentPeriodEnd: new Date(((subscription as any).current_period_end ?? 0) * 1000).toISOString(),
+            cancelAtPeriodEnd: (subscription as any).cancel_at_period_end ?? false,
           }
         : null,
       usage: {

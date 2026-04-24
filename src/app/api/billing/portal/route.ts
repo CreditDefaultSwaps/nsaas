@@ -7,7 +7,7 @@ function getStripe(): Stripe | null {
   const key = process.env.STRIPE_SECRET_KEY;
   if (!key || key.includes('placeholder')) return null;
   return new Stripe(key, {
-    apiVersion: '2025-02-24.acacia' as Parameters<typeof Stripe>[1]['apiVersion'],
+    apiVersion: '2025-02-24.acacia' as any,
   });
 }
 
