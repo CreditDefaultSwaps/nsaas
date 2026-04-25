@@ -18,6 +18,7 @@ import {
   LogOut,
   CreditCard,
 } from '@/components/icons';
+import { OnboardingWizard } from '@/components/OnboardingWizard';
 
 // Check if Clerk is configured
 const isClerkConfigured = typeof window !== 'undefined' && 
@@ -138,11 +139,14 @@ export default function DashboardLayout({
       </main>
 
       {/* Command Palette */}
-      <CommandPalette 
-        commands={commands} 
-        isOpen={isCommandOpen} 
-        onClose={() => setIsCommandOpen(false)} 
+      <CommandPalette
+        commands={commands}
+        isOpen={isCommandOpen}
+        onClose={() => setIsCommandOpen(false)}
       />
+
+      {/* First-run onboarding */}
+      <OnboardingWizard />
     </div>
   );
 }
