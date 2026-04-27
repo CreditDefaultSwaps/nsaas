@@ -178,6 +178,10 @@ export interface Database {
           created_by: string;
           pr_url: string | null;
           branch_name: string | null;
+          github_repo: string | null;
+          github_installation_id: number | null;
+          github_branch: string | null;
+          github_pr_url: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -192,6 +196,10 @@ export interface Database {
           created_by: string;
           pr_url?: string | null;
           branch_name?: string | null;
+          github_repo?: string | null;
+          github_installation_id?: number | null;
+          github_branch?: string | null;
+          github_pr_url?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -206,6 +214,10 @@ export interface Database {
           created_by?: string;
           pr_url?: string | null;
           branch_name?: string | null;
+          github_repo?: string | null;
+          github_installation_id?: number | null;
+          github_branch?: string | null;
+          github_pr_url?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -239,6 +251,9 @@ export interface Database {
           agent_logs: string | null;
           pr_number: number | null;
           commit_sha: string | null;
+          github_branch: string | null;
+          github_commit_url: string | null;
+          github_pr_url: string | null;
         };
         Insert: {
           id?: string;
@@ -252,6 +267,9 @@ export interface Database {
           agent_logs?: string | null;
           pr_number?: number | null;
           commit_sha?: string | null;
+          github_branch?: string | null;
+          github_commit_url?: string | null;
+          github_pr_url?: string | null;
         };
         Update: {
           id?: string;
@@ -265,6 +283,9 @@ export interface Database {
           agent_logs?: string | null;
           pr_number?: number | null;
           commit_sha?: string | null;
+          github_branch?: string | null;
+          github_commit_url?: string | null;
+          github_pr_url?: string | null;
         };
         Relationships: [
           {

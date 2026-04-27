@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Normalize priority to schema format (low/medium/high/urgent)
-    const priorityMap: Record<string, string> = {
+    const priorityMap: Record<string, 'low' | 'medium' | 'high' | 'urgent'> = {
       'urgent': 'urgent', 'high': 'high',
       'medium': 'medium', 'tonight': 'high', 'p1': 'medium',
       'low': 'low', 'this week': 'low', 'p2': 'low',
@@ -123,12 +123,12 @@ export async function POST(request: NextRequest) {
         id: featureId,
         org_id: (user as any).org_id,
         repo_id: repo_id || null,
-        requested_by: (user as any).id,
         title: title.trim(),
         description: description.trim(),
         priority: normalizedPriority,
         status: 'pending',
-      })
+        created_by: (user as any).id,
+      } as any)
       .select()
       .single();
 
@@ -145,9 +145,8 @@ export async function POST(request: NextRequest) {
         id: buildId,
         feature_id: feature.id,
         org_id: (user as any).org_id,
-        agent_name: 'night-shift-dev',
         status: 'queued',
-      });
+      } as any);
 
     if (buildError) {
       console.error('Error creating build:', buildError);
